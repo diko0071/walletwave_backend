@@ -1,1 +1,1 @@
-web: gunicorn backend.wsgi:application -c conf/gunicorn_conf.py
+web: gunicorn backend.wsgi:application --preload -w 2 -k gevent
