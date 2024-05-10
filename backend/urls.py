@@ -18,13 +18,15 @@ from django.contrib import admin
 from django.urls import path
 from django.urls import include
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenVerifyView
+from django.conf.urls.static import static
+from django.conf import settings
 
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/", include("transaction.urls")),
     path('api/auth/', include('useraccount.urls')),
     path("api/", include("chat.urls")),
-]
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 handler500 = 'utils.error_views.handler500'
 handler404 = 'utils.error_views.handler404'
