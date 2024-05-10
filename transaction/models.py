@@ -49,6 +49,7 @@ class Transaction(models.Model):
 
         response = requests.get(url)
         data = response.json()
+        print("data", data)
 
         if data['result'] != 'success':
             return None
@@ -56,11 +57,12 @@ class Transaction(models.Model):
         conversion_rates = data.get('conversion_rates', {})
         from_rate = Decimal(conversion_rates.get(from_currency, 0))
         to_rate = Decimal(conversion_rates.get(to_currency, 0))
-        
+        print("from_rate", from_rate, "to_rate", to_rate)
         if from_rate == 0 or to_rate == 0:
             return None
         
         conversion_factor = to_rate / from_rate
+        print("conversion_factor", conversion_factor)
         return Decimal(amount) * conversion_factor
     
     def save(self, *args, **kwargs):
@@ -69,7 +71,6 @@ class Transaction(models.Model):
 
         if user_account_instance:
             user_currency = user_account_instance.currency
-
             if self.transaction_currency != user_currency:
                 try:
                     converted_amount = self.currency_converter(self.amount,         

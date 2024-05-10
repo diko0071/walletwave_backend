@@ -6,7 +6,6 @@ backend/transaction/migrations
 backend/transaction/migrations
 backend/backend/__pycache__
 backend/backend/migrations
-fronend/node_modules
 backend/myenv
 backend/chat/migrations
 backend/chat/__pycache__
@@ -16,3 +15,4 @@ frontend/.next
 frontend/.env.local
 frontend/.DS_Store
 .cursorignore
+fronend/node_modules

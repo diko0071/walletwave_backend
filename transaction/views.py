@@ -139,25 +139,23 @@ def create_ai_transactions(request):
 
 
     default_currency = request.user.currency
-    transaction_instances = [
-        Transaction(
+    response_data = []
+    for transaction_data in transactions_data:
+        transaction_instance = Transaction(
             user=request.user,
             amount=transaction_data['amount'],
             description=transaction_data['description'],
             category=transaction_data['category'],
             transaction_currency=transaction_data.get('transaction_currency', default_currency)
-        ) for transaction_data in transactions_data
-    ]
-    bulk_created_transactions = Transaction.objects.bulk_create(transaction_instances)
-    transaction_dicts = [model_to_dict(transaction) for transaction in bulk_created_transactions]
-
-
-    response_data = [{
-        "id": trans['id'],
-        "amount": trans['amount'],
-        "description": trans['description'],
-        "category": trans['category'],
-        "transaction_currency": trans['transaction_currency']
-    } for trans in transaction_dicts]
+        )
+        transaction_instance.save()
+        transaction_dict = model_to_dict(transaction_instance)
+        response_data.append({
+            "id": transaction_dict['id'],
+            "amount": transaction_dict['amount'],
+            "description": transaction_dict['description'],
+            "category": transaction_dict['category'],
+            "transaction_currency": transaction_dict['transaction_currency']
+        })
 
     return Response(response_data, status=status.HTTP_201_CREATED)
