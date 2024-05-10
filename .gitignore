@@ -16,3 +16,4 @@ frontend/.env.local
 frontend/.DS_Store
 .cursorignore
 fronend/node_modules
+.idea
