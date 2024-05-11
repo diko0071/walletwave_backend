@@ -1,6 +1,9 @@
 .env
 backend/account/migrations
 backend/account/__pycache__
+backend/useraccount/__pycache__
+backend/useraccount/migrations
+backend/__pycache__
 backend/transaction/__pycache__
 backend/transaction/migrations
 backend/transaction/migrations
