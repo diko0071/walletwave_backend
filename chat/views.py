@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from .serializers import ChatSessionSerializer, ChatMessageSerializer, SystemMessagetSerializer
+from .serializers import ChatSessionSerializer, ChatMessageSerializer, SystemMessageSerializer
 from .models import ChatSession, ChatMessage, SystemMessage
 from django.shortcuts import get_object_or_404
 from rest_framework import status
@@ -42,7 +42,7 @@ def get_answer(request, pk):
         chat_message = serializer.save(session=chat_session, system_message=chat_session.system_message)
         
         try:
-            serializer = SystemMessagetSerializer(SystemMessage.objects.get(name="Global"))
+            serializer = SystemMessageSerializer(SystemMessage.objects.get(name="Global"))
             system_message = serializer.data['prompt']
         except SystemMessage.DoesNotExist:
             system_message = ""

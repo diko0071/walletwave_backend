@@ -1,15 +1,15 @@
 from django.shortcuts import render
 from rest_framework.decorators import api_view
-from .models import Transaction, TransactionCategory
+from .models import Transaction, TransactionCategory, RecurringTransaction
 from rest_framework.response import Response
-from .serializers import TransactionSerializer
+from .serializers import TransactionSerializer, RecurringTransactionSerializer
 from django.shortcuts import get_object_or_404
 from rest_framework import status
 from django.db.models import Count, Q, Sum
 from .filters import TransactionsFilter
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import permission_classes
-from chat.serializers import SystemMessagetSerializer
+from chat.serializers import SystemMessageSerializer
 from chat.models import SystemMessage
 from django.forms.models import model_to_dict
 from django.db import transaction as db_transaction
@@ -159,3 +159,51 @@ def create_ai_transactions(request):
         })
 
     return Response(response_data, status=status.HTTP_201_CREATED)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_all_recurring_transactions(request):
+    user = request.user
+    transactions = RecurringTransaction.objects.filter(user=user).order_by('-created_at')
+    serializer = RecurringTransactionSerializer(transactions, many=True)
+    return Response(serializer.data)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_recurring_transaction(request, id):
+    user = request.user
+    transaction = get_object_or_404(RecurringTransaction, id=id, user=user)
+    serializer = RecurringTransactionSerializer(transaction, many=False)
+    return Response(serializer.data)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def create_recurring_transaction(request):
+    data = request.data.copy()
+    data['user'] = request.user.pk
+    serializer = RecurringTransactionSerializer(data=data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    else:
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def update_recurring_transaction(request, id):
+    user = request.user
+    transaction = get_object_or_404(RecurringTransaction, id=id, user=user)
+    serializer = RecurringTransactionSerializer(transaction, data=request.data, partial=True)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    else:
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def delete_recurring_transaction(request, id):
+    user = request.user
+    transaction = get_object_or_404(RecurringTransaction, id=id, user=user)
+    transaction.delete()
+    return Response({'message': 'Recurring transaction was deleted successfully!'}, status=status.HTTP_204_NO_CONTENT)

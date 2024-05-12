@@ -12,7 +12,7 @@ class ChatMessageSerializer(serializers.ModelSerializer):
         model = ChatMessage
         fields = ('session', 'human_message', 'ai_message', 'json_response', 'system_message')
 
-class SystemMessagetSerializer(serializers.ModelSerializer):
+class SystemMessageSerializer(serializers.ModelSerializer):
     class Meta:
         model = SystemMessage
         fields = '__all__'

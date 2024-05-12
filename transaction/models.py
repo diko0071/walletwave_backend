@@ -17,6 +17,7 @@ class TransactionCategory(models.TextChoices):
     EDUCATION = "Education"
     GIFT = "Gifts"
     RENT = "Rent"
+    SUBSCRIPTION = "Subscription"
     OTHER = "Other"
 
 class TransactionCurrency(models.TextChoices):
@@ -28,6 +29,15 @@ class TransactionCurrency(models.TextChoices):
     AUD = "AUD"
     KZT = "KZT"
 
+class TransactionType(models.TextChoices):
+    REGULAR = "Regular"
+    RECURRING = "Recurring"
+
+class TransactionFrequency(models.TextChoices):
+    WEEKLY = "Weekly"
+    MONTHLY = "Monthly"
+    YEARLY = "Yearly"
+
 class Transaction(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
@@ -38,6 +48,7 @@ class Transaction(models.Model):
     converted_currency = models.CharField(max_length=3, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    transaction_type = models.CharField(max_length=20, choices=TransactionType.choices, default=TransactionType.REGULAR)
 
     def __str__(self):
         return f"{self.description} - {self.amount} {self.transaction_currency}"
@@ -85,3 +96,17 @@ class Transaction(models.Model):
                 self.converted_currency = self.transaction_currency
 
         super(Transaction, self).save(*args, **kwargs)
+
+class RecurringTransaction(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    description = models.CharField(max_length=300)
+    category = models.CharField(max_length=20, choices=TransactionCategory.choices)
+    charge_day = models.IntegerField()
+    frequency = models.CharField(max_length=20, choices=TransactionFrequency.choices, default=TransactionFrequency.MONTHLY)
+    currency = models.CharField(max_length=20, choices=TransactionCurrency.choices, default=TransactionCurrency.USD)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.description} - {self.amount} {self.currency} - {self.frequency} - Day {self.charge_day} of each month"
