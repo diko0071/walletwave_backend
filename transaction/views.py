@@ -93,12 +93,13 @@ def get_transactions_stat(request):
     previous_week_start = current_week_start - timedelta(days=7)
     previous_week_end = current_week_start - timedelta(microseconds=1)
 
-    monthly_sum = user_transactions.filter(created_at__range=[current_month_start, current_month_end]).aggregate(total_sum=Sum('amount'))['total_sum'] or 0
-    previous_month_sum = user_transactions.filter(created_at__range=[previous_month_start, previous_month_end]).aggregate(total_sum=Sum('amount'))['total_sum'] or 0
+
+    monthly_sum = user_transactions.filter(created_at__range=[current_month_start, current_month_end]).aggregate(total_sum=Sum('converted_amount'))['total_sum'] or 0
+    previous_month_sum = user_transactions.filter(created_at__range=[previous_month_start, previous_month_end]).aggregate(total_sum=Sum('converted_amount'))['total_sum'] or 0
     monthly_change = round(((monthly_sum - previous_month_sum) / previous_month_sum * 100) if previous_month_sum != 0 else 0, 2)
     
-    weekly_sum = user_transactions.filter(created_at__range=[current_week_start, current_week_end]).aggregate(total_sum=Sum('amount'))['total_sum'] or 0
-    previous_week_sum = user_transactions.filter(created_at__range=[previous_week_start, previous_week_end]).aggregate(total_sum=Sum('amount'))['total_sum'] or 0
+    weekly_sum = user_transactions.filter(created_at__range=[current_week_start, current_week_end]).aggregate(total_sum=Sum('converted_amount'))['total_sum'] or 0
+    previous_week_sum = user_transactions.filter(created_at__range=[previous_week_start, previous_week_end]).aggregate(total_sum=Sum('converted_amount'))['total_sum'] or 0
     weekly_change = round(((weekly_sum - previous_week_sum) / previous_week_sum * 100) if previous_week_sum != 0 else 0, 2)
     
     current_month_transactions_count = user_transactions.filter(created_at__range=[current_month_start, current_month_end]).count()
@@ -107,6 +108,7 @@ def get_transactions_stat(request):
     
     top_category_current_month = user_transactions.filter(created_at__range=[current_month_start, current_month_end]).values('category').annotate(total=Count('id')).order_by('-total').first()
     top_category_previous_month = user_transactions.filter(created_at__range=[previous_month_start, previous_month_end]).values('category').annotate(total=Count('id')).order_by('-total').first()
+
 
     data = {
         'monthly_sum': monthly_sum,
