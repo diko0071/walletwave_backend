@@ -15,9 +15,11 @@ from django.forms.models import model_to_dict
 from django.db import transaction as db_transaction
 from .services import ai_transaction_converter
 import json
+import calendar
 from django.utils import timezone
 from django.db.models.functions import TruncMonth, TruncWeek
 import datetime
+from datetime import timedelta
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -74,28 +76,35 @@ def get_transactions_stat(request):
     user_transactions = Transaction.objects.filter(user=user)
 
     now = timezone.now()
+    
     current_month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-    current_month_end = (current_month_start + datetime.timedelta(days=31)).replace(day=1) - datetime.timedelta(seconds=1)
-    previous_month_start = (current_month_start - datetime.timedelta(days=1)).replace(day=1)
-    previous_month_end = current_month_start - datetime.timedelta(seconds=1)
-
-    current_week_start = now - datetime.timedelta(days=now.weekday())
-    current_week_end = current_week_start + datetime.timedelta(days=6, hours=23, minutes=59, seconds=59)
-    previous_week_start = current_week_start - datetime.timedelta(days=7)
-    previous_week_end = current_week_start - datetime.timedelta(seconds=1)
+    last_day_of_current_month = calendar.monthrange(now.year, now.month)[1]
+    current_month_end = now.replace(day=last_day_of_current_month, hour=23, minute=59, second=59, microsecond=999999)
+    
+    previous_month_date = current_month_start - timedelta(days=1)
+    previous_month_start = previous_month_date.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    last_day_of_previous_month = calendar.monthrange(previous_month_date.year, previous_month_date.month)[1]
+    previous_month_end = previous_month_date.replace(day=last_day_of_previous_month, hour=23, minute=59, second=59, microsecond=999999)
+    
+    current_week_start = now - timedelta(days=now.weekday())
+    current_week_start = current_week_start.replace(hour=0, minute=0, second=0, microsecond=0)
+    current_week_end = current_week_start + timedelta(days=6, hours=23, minutes=59, seconds=59, microseconds=999999)
+    
+    previous_week_start = current_week_start - timedelta(days=7)
+    previous_week_end = current_week_start - timedelta(microseconds=1)
 
     monthly_sum = user_transactions.filter(created_at__range=[current_month_start, current_month_end]).aggregate(total_sum=Sum('amount'))['total_sum'] or 0
     previous_month_sum = user_transactions.filter(created_at__range=[previous_month_start, previous_month_end]).aggregate(total_sum=Sum('amount'))['total_sum'] or 0
-    monthly_change = round(((monthly_sum - previous_month_sum) / previous_month_sum * 100) if previous_month_sum else 0, 2)
-
+    monthly_change = round(((monthly_sum - previous_month_sum) / previous_month_sum * 100) if previous_month_sum != 0 else 0, 2)
+    
     weekly_sum = user_transactions.filter(created_at__range=[current_week_start, current_week_end]).aggregate(total_sum=Sum('amount'))['total_sum'] or 0
     previous_week_sum = user_transactions.filter(created_at__range=[previous_week_start, previous_week_end]).aggregate(total_sum=Sum('amount'))['total_sum'] or 0
-    weekly_change = round(((weekly_sum - previous_week_sum) / previous_week_sum * 100) if previous_week_sum else 0, 2)
-
+    weekly_change = round(((weekly_sum - previous_week_sum) / previous_week_sum * 100) if previous_week_sum != 0 else 0, 2)
+    
     current_month_transactions_count = user_transactions.filter(created_at__range=[current_month_start, current_month_end]).count()
     previous_month_transactions_count = user_transactions.filter(created_at__range=[previous_month_start, previous_month_end]).count()
-    transactions_count_change = round(((current_month_transactions_count - previous_month_transactions_count) / previous_month_transactions_count * 100) if previous_month_transactions_count else 0, 2)
-
+    transactions_count_change = round(((current_month_transactions_count - previous_month_transactions_count) / previous_month_transactions_count * 100) if previous_month_transactions_count != 0 else 0, 2)
+    
     top_category_current_month = user_transactions.filter(created_at__range=[current_month_start, current_month_end]).values('category').annotate(total=Count('id')).order_by('-total').first()
     top_category_previous_month = user_transactions.filter(created_at__range=[previous_month_start, previous_month_end]).values('category').annotate(total=Count('id')).order_by('-total').first()
 
