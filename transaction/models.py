@@ -34,9 +34,7 @@ class TransactionType(models.TextChoices):
     RECURRING = "Recurring"
 
 class TransactionFrequency(models.TextChoices):
-    WEEKLY = "Weekly"
     MONTHLY = "Monthly"
-    YEARLY = "Yearly"
 
 class Transaction(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
