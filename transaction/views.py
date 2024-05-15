@@ -93,6 +93,15 @@ def get_transactions_stat(request):
     previous_week_start = current_week_start - timedelta(days=7)
     previous_week_end = current_week_start - timedelta(microseconds=1)
 
+    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    today_end = now.replace(hour=23, minute=59, second=59, microsecond=999999)
+    yesterday_start = today_start - timedelta(days=1)
+    yesterday_end = today_end - timedelta(days=1)
+
+    today_sum = user_transactions.filter(created_at__range=[today_start, today_end]).aggregate(total_sum=Sum('converted_amount'))['total_sum'] or 0
+    yesterday_sum = user_transactions.filter(created_at__range=[yesterday_start, yesterday_end]).aggregate(total_sum=Sum('converted_amount'))['total_sum'] or 0
+    daily_change = round(((today_sum - yesterday_sum) / yesterday_sum * 100) if yesterday_sum != 0 else 0, 2)
+    daily_change_absolute = round(today_sum - yesterday_sum, 2)
 
     monthly_sum = user_transactions.filter(created_at__range=[current_month_start, current_month_end]).aggregate(total_sum=Sum('converted_amount'))['total_sum'] or 0
     previous_month_sum = user_transactions.filter(created_at__range=[previous_month_start, previous_month_end]).aggregate(total_sum=Sum('converted_amount'))['total_sum'] or 0
@@ -119,6 +128,10 @@ def get_transactions_stat(request):
         'transactions_count_change': transactions_count_change,
         'top_category_current_month': top_category_current_month,
         'top_category_previous_month': top_category_previous_month,
+        'today_sum': today_sum,
+        'yesterday_sum': yesterday_sum,
+        'daily_change': daily_change,
+        'daily_change_absolute': daily_change_absolute,
     }
 
     return Response(data)
