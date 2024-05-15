@@ -6,6 +6,8 @@ from django.dispatch import receiver
 from decimal import Decimal
 from django.apps import apps
 import os
+import datetime
+from django.utils import timezone
 
 class TransactionCategory(models.TextChoices):
     TRAVEL = "Travel"
@@ -47,6 +49,7 @@ class Transaction(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     transaction_type = models.CharField(max_length=20, choices=TransactionType.choices, default=TransactionType.REGULAR)
+    transaction_date = models.DateField(default=timezone.now)
 
     def __str__(self):
         return f"{self.description} - {self.amount} {self.transaction_currency}"
