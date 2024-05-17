@@ -20,6 +20,12 @@ from django.utils import timezone
 from django.db.models.functions import TruncMonth, TruncWeek
 import datetime
 from datetime import timedelta
+from django.views.decorators.cache import cache_page
+from django.core.cache import cache
+
+def clear_cache():
+    cache.clear()
+
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -57,6 +63,7 @@ def update_transaction(request, id):
     serializer = TransactionSerializer(transaction, data=request.data, partial=True)
     if serializer.is_valid():
         serializer.save()
+        clear_cache()
         return Response(serializer.data, status=status.HTTP_200_OK)
     else:
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -67,6 +74,7 @@ def delete_transaction(request, id):
     user = request.user
     transaction = get_object_or_404(Transaction, id=id, user=user)
     transaction.delete()
+    clear_cache()
     return Response({'message': 'Transaction was deleted successfully!'}, status=status.HTTP_204_NO_CONTENT)
 
 @api_view(['GET'])
@@ -180,7 +188,7 @@ def create_ai_transactions(request):
             "category": transaction_dict['category'],
             "transaction_currency": transaction_dict['transaction_currency']
         })
-
+    clear_cache()
     return Response(response_data, status=status.HTTP_201_CREATED)
 
 @api_view(['GET'])

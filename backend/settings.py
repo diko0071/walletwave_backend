@@ -67,6 +67,7 @@ ACCOUNT_EMAIL_VERIFICATION = None
 
 INSTALLED_APPS = [
     "django.contrib.admin",
+    "django_redis",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
@@ -148,14 +149,6 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 REST_FRAMEWORK = {
-    'EXCEPTION_HANDLER': 'utils.custom_exception_handler.custom_exception_handler',
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        "rest_framework_simplejwt.authentication.JWTAuthentication",
-        
-    ),
-}
-
-REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
@@ -207,6 +200,16 @@ TIME_ZONE = "UTC"
 USE_I18N = True
 
 USE_TZ = True
+
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://:WwaA8dX3cg3zqX5lsTEaR5rW2sQ1bsYw@redis-10170.c261.us-east-1-4.ec2.redns.redis-cloud.com:10170/0",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
+    }
+}
 
 
 # Static files (CSS, JavaScript, Images)

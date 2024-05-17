@@ -8,6 +8,9 @@ from django.apps import apps
 import os
 import datetime
 from django.utils import timezone
+from django.db.models.signals import post_save, post_delete
+from django.dispatch import receiver
+from django.core.cache import cache
 
 class TransactionCategory(models.TextChoices):
     TRAVEL = "Travel"
@@ -111,3 +114,10 @@ class RecurringTransaction(models.Model):
 
     def __str__(self):
         return f"{self.description} - {self.amount} {self.currency} - {self.frequency} - Day {self.charge_day} of each month"
+    
+
+@receiver(post_save, sender=Transaction)
+@receiver(post_delete, sender=Transaction)
+def clear_transaction_cache(sender, instance, **kwargs):
+    user_pk = instance.user.pk
+    cache.delete(f"all_transactions_{user_pk}")
