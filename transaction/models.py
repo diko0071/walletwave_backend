@@ -137,14 +137,3 @@ class RecurringTransaction(models.Model):
     def __str__(self):
         return f"{self.description} - {self.amount} {self.currency} - {self.frequency} - Day {self.charge_day} of each month"
     
-
-@receiver(post_save, sender=RecurringTransaction)
-def create_recurring_transaction_task(sender, instance, created, **kwargs):
-    if created:
-        print(f"Создан новый RecurringTransaction с ID: {instance.id}")
-        print(f"Планирование задачи на дату: {instance.next_charge_date}")
-        create_transaction_and_update_next_charge_date.apply_async(
-            (instance.id,),
-            eta=instance.next_charge_date
-        )
-    
