@@ -45,12 +45,6 @@ class RecurringTransactionSerializer(serializers.ModelSerializer):
             }
         )
 
-        if not created:
-            task.crontab = schedule
-            task.args = json.dumps([instance.id])
-            task.task = 'transaction.tasks.create_transaction_and_update_next_charge_date'
-            task.save()
-
         today = timezone.now().day
         if today == instance.charge_day:
             create_transaction_and_update_next_charge_date.apply_async(args=[instance.id])
