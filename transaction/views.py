@@ -239,5 +239,9 @@ def update_recurring_transaction(request, id):
 def delete_recurring_transaction(request, id):
     user = request.user
     transaction = get_object_or_404(RecurringTransaction, id=id, user=user)
+    
+    task_name_prefix = f"Create Transaction and Update Next Charge Date - transaction_id: {transaction.id}"
+    PeriodicTask.objects.filter(name__startswith=task_name_prefix).delete()
+    
     transaction.delete()
     return Response({'message': 'Recurring transaction was deleted successfully!'}, status=status.HTTP_204_NO_CONTENT)

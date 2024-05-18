@@ -4,6 +4,7 @@ from useraccount.models import User
 from django_celery_beat.models import PeriodicTask, CrontabSchedule
 from django.utils import timezone
 import json 
+import uuid
 from .tasks import create_transaction_and_update_next_charge_date
 
 class TransactionSerializer(serializers.ModelSerializer):
@@ -20,13 +21,8 @@ class RecurringTransactionSerializer(serializers.ModelSerializer):
         model = RecurringTransaction
         fields = '__all__'
 
-    def create(self, validated_data):
-        instance = super().create(validated_data)
-        self.create_or_update_periodic_task(instance)
-        return instance
-
-    def update(self, instance, validated_data):
-        instance = super().update(instance, validated_data)
+    def save(self, **kwargs):
+        instance = super().save(**kwargs)
         self.create_or_update_periodic_task(instance)
         return instance
 
@@ -39,12 +35,12 @@ class RecurringTransactionSerializer(serializers.ModelSerializer):
             day_of_week='*',
         )
 
-        task_name = f"Create Transaction and Update Next Charge Date - {instance.id}"
+        task_name = f"Create Transaction and Update Next Charge Date - transaction_id: {instance.id}, task_id: {uuid.uuid4()}"
         task, created = PeriodicTask.objects.get_or_create(
             crontab=schedule,
             name=task_name,
             defaults={
-                'task': 'celery_app.debug_task',
+                'task': 'transaction.tasks.create_transaction_and_update_next_charge_date',
                 'args': json.dumps([instance.id]),
             }
         )
@@ -52,6 +48,7 @@ class RecurringTransactionSerializer(serializers.ModelSerializer):
         if not created:
             task.crontab = schedule
             task.args = json.dumps([instance.id])
+            task.task = 'transaction.tasks.create_transaction_and_update_next_charge_date'
             task.save()
 
         today = timezone.now().day
