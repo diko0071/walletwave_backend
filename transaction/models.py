@@ -13,7 +13,7 @@ from django.dispatch import receiver
 from django.core.cache import cache
 from django.utils.timezone import now
 import calendar
-from .tasks import set_next_charge_date
+from .tasks import create_transaction_and_update_next_charge_date
 
 class TransactionCategory(models.TextChoices):
     TRAVEL = "Travel"
@@ -116,6 +116,24 @@ class RecurringTransaction(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     next_charge_date = models.DateField(null=True, blank=True)
 
+    def save(self, *args, **kwargs):
+        today = now().date()
+        current_month_days = calendar.monthrange(today.year, today.month)[1]
+
+        if self.charge_day > current_month_days:
+            self.charge_day = current_month_days
+
+        if today.day < self.charge_day:
+            self.next_charge_date = today.replace(day=self.charge_day)
+        else:
+            next_month = today.month + 1 if today.month < 12 else 1
+            next_year = today.year if today.month < 12 else today.year + 1
+            next_month_days = calendar.monthrange(next_year, next_month)[1]
+            charge_day = min(self.charge_day, next_month_days)
+            self.next_charge_date = today.replace(year=next_year, month=next_month, day=charge_day)
+
+        super(RecurringTransaction, self).save(*args, **kwargs)
+
     def __str__(self):
         return f"{self.description} - {self.amount} {self.currency} - {self.frequency} - Day {self.charge_day} of each month"
     
@@ -123,4 +141,10 @@ class RecurringTransaction(models.Model):
 @receiver(post_save, sender=RecurringTransaction)
 def create_recurring_transaction_task(sender, instance, created, **kwargs):
     if created:
-        set_next_charge_date.delay(instance.id)
+        print(f"Создан новый RecurringTransaction с ID: {instance.id}")
+        print(f"Планирование задачи на дату: {instance.next_charge_date}")
+        create_transaction_and_update_next_charge_date.apply_async(
+            (instance.id,),
+            eta=instance.next_charge_date
+        )
+    
