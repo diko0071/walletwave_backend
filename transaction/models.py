@@ -11,6 +11,9 @@ from django.utils import timezone
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 from django.core.cache import cache
+from django.utils.timezone import now
+import calendar
+from .tasks import set_next_charge_date
 
 class TransactionCategory(models.TextChoices):
     TRAVEL = "Travel"
@@ -111,13 +114,13 @@ class RecurringTransaction(models.Model):
     currency = models.CharField(max_length=20, choices=TransactionCurrency.choices, default=TransactionCurrency.USD)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    next_charge_date = models.DateField(null=True, blank=True)
 
     def __str__(self):
         return f"{self.description} - {self.amount} {self.currency} - {self.frequency} - Day {self.charge_day} of each month"
     
 
-@receiver(post_save, sender=Transaction)
-@receiver(post_delete, sender=Transaction)
-def clear_transaction_cache(sender, instance, **kwargs):
-    user_pk = instance.user.pk
-    cache.delete(f"all_transactions_{user_pk}")
+@receiver(post_save, sender=RecurringTransaction)
+def create_recurring_transaction_task(sender, instance, created, **kwargs):
+    if created:
+        set_next_charge_date.delay(instance.id)

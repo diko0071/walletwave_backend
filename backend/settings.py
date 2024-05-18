@@ -204,12 +204,14 @@ USE_TZ = True
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "redis://:WwaA8dX3cg3zqX5lsTEaR5rW2sQ1bsYw@redis-10170.c261.us-east-1-4.ec2.redns.redis-cloud.com:10170/0",
+        "LOCATION": os.environ.get('REDIS_URL'),
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
         }
     }
 }
+
+CELERY_BROKER_URL = os.environ.get('REDIS_URL')
 
 
 # Static files (CSS, JavaScript, Images)
