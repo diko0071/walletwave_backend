@@ -27,6 +27,22 @@ class RecurringTransactionSerializer(serializers.ModelSerializer):
         return instance
 
     def create_or_update_periodic_task(self, instance):
+        existing_tasks = PeriodicTask.objects.filter(name__contains=f"transaction_id: {instance.id}")
+        today = timezone.now().day
+
+        if existing_tasks.exists():
+            existing_tasks.delete()
+            self.create_new_periodic_task(instance)
+        
+        else:
+            print('no existing_task')
+            self.create_new_periodic_task(instance)
+
+        if today == instance.charge_day:
+            print('today == charge_day')
+            create_transaction_and_update_next_charge_date.apply_async(args=[instance.id])
+
+    def create_new_periodic_task(self, instance):
         schedule, created = CrontabSchedule.objects.get_or_create(
             minute='0',
             hour='0',
@@ -34,23 +50,10 @@ class RecurringTransactionSerializer(serializers.ModelSerializer):
             month_of_year='*',
             day_of_week='*',
         )
-
         task_name = f"Create Transaction and Update Next Charge Date - transaction_id: {instance.id}, task_id: {uuid.uuid4()}"
-        task, created = PeriodicTask.objects.get_or_create(
+        PeriodicTask.objects.create(
             crontab=schedule,
             name=task_name,
-            defaults={
-                'task': 'transaction.tasks.create_transaction_and_update_next_charge_date',
-                'args': json.dumps([instance.id]),
-            }
+            task='transaction.tasks.create_transaction_and_update_next_charge_date',
+            args=json.dumps([instance.id]),
         )
-
-        if not created:
-            task.crontab = schedule
-            task.args = json.dumps([instance.id])
-            task.task = 'transaction.tasks.create_transaction_and_update_next_charge_date'
-            task.save()
-
-        today = timezone.now().day
-        if today == instance.charge_day:
-            create_transaction_and_update_next_charge_date.apply_async(args=[instance.id])

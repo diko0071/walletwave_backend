@@ -120,24 +120,34 @@ class RecurringTransaction(models.Model):
         today = now().date()
         current_month_days = calendar.monthrange(today.year, today.month)[1]
 
-        if self.charge_day > current_month_days:
-            self.charge_day = current_month_days
+        if not self.next_charge_date:
+            print('next_charge_date is None')
+            if self.charge_day > current_month_days:
+                self.charge_day = current_month_days
 
-        if today.day < self.charge_day:
-            self.next_charge_date = today.replace(day=self.charge_day)
+            if today.day < self.charge_day:
+                self.next_charge_date = today.replace(day=self.charge_day)
 
-        if today.day == self.charge_day:
-            self.next_charge_date = today
-        else:
-            next_month = today.month + 1 if today.month < 12 else 1
-            next_year = today.year if today.month < 12 else today.year + 1
-            next_month_days = calendar.monthrange(next_year, next_month)[1]
-            charge_day = min(self.charge_day, next_month_days)
-            self.next_charge_date = today.replace(year=next_year, month=next_month, day=charge_day)
+            elif today.day == self.charge_day:
+                self.next_charge_date = today
+            else:
+                next_month = today.month + 1 if today.month < 12 else 1
+                next_year = today.year if today.month < 12 else today.year + 1
+                next_month_days = calendar.monthrange(next_year, next_month)[1]
+                charge_day = min(self.charge_day, next_month_days)
+                self.next_charge_date = today.replace(year=next_year, month=next_month, day=charge_day)
 
+        else: 
+            if today.day < self.charge_day:
+                self.next_charge_date = today.replace(day=self.charge_day)
+            else:
+                next_month = today.month + 1 if today.month < 12 else 1
+                next_year = today.year if today.month < 12 else today.year + 1
+                next_month_days = calendar.monthrange(next_year, next_month)[1]
+                charge_day = min(self.charge_day, next_month_days)
+                self.next_charge_date = today.replace(year=next_year, month=next_month, day=charge_day)
 
         super(RecurringTransaction, self).save(*args, **kwargs)
 
-    def __str__(self):
-        return f"{self.description} - {self.amount} {self.currency} - {self.frequency} - Day {self.charge_day} of each month"
-    
+        def __str__(self):
+            return f"{self.description} - {self.amount} {self.currency} - {self.frequency} - Day {self.charge_day} of each month"
