@@ -51,9 +51,10 @@ class RecurringTransactionSerializer(serializers.ModelSerializer):
             day_of_week='*',
         )
         task_name = f"Create Transaction and Update Next Charge Date - transaction_id: {instance.id}, task_id: {uuid.uuid4()}"
+        task = 'transaction.tasks.create_transaction_and_update_next_charge_date'
         PeriodicTask.objects.create(
             crontab=schedule,
             name=task_name,
-            task='transaction.tasks.create_transaction_and_update_next_charge_date',
+            task=task,
             args=json.dumps([instance.id]),
         )

@@ -5,7 +5,7 @@ import calendar
 from django_celery_beat.models import PeriodicTask, PeriodicTasks, CrontabSchedule
 from datetime import datetime
 
-@shared_task
+@shared_task(name='transaction.tasks.create_transaction_and_update_next_charge_date')
 def create_transaction_and_update_next_charge_date(recurring_transaction_id):
     from .models import RecurringTransaction, Transaction
     recurring_transaction = RecurringTransaction.objects.get(id=recurring_transaction_id)
