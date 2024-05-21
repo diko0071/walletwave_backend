@@ -74,6 +74,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     'django_celery_beat',
+    'celery',
 
     "rest_framework",
     "corsheaders",
@@ -213,10 +214,10 @@ CACHES = {
 }
 
 CELERY_BROKER_URL = os.environ.get('REDIS_URL')
-CELERY_RESULT_BACKEND = os.environ.get('REDIS_URL')
-CELERY_ACCEPT_CONTENT = ['json']
-CELERY_TASK_SERIALIZER = 'json'
-CELERY_RESULT_SERIALIZER = 'json'
+accept_content = ['json']
+task_serializer = 'json'
+result_serializer = 'json'
+result_backend = os.environ.get('REDIS_URL')
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/

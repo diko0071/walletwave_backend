@@ -23,6 +23,7 @@ from datetime import timedelta
 from django.views.decorators.cache import cache_page
 from django.core.cache import cache
 from django_celery_beat.models import PeriodicTask, PeriodicTasks, CrontabSchedule
+from .tasks import create_transaction_and_update_next_charge_date
 from datetime import datetime
 
 def clear_cache():
