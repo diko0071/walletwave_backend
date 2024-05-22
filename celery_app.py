@@ -12,6 +12,8 @@ app.conf.broker_url = settings.CELERY_BROKER_URL
 app.conf.broker_connection_retry_on_startup = True
 app.autodiscover_tasks()
 
+app.conf.beat_scheduler = 'django_celery_beat.schedulers:DatabaseScheduler'
+
 @app.task(name='debug_task')
 def debug_task():
     time.sleep(10)
