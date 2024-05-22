@@ -14,6 +14,8 @@ app.autodiscover_tasks()
 
 app.conf.beat_scheduler = 'django_celery_beat.schedulers:DatabaseScheduler'
 
+app.conf.beat_max_loop_interval = 300
+
 @app.task(name='debug_task')
 def debug_task():
     time.sleep(10)
