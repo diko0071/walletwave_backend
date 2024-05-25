@@ -20,7 +20,7 @@ class ChatSession(models.Model):
     system_message = models.TextField(blank=True, default='')
 
     def __str__(self):
-        return f"ChatSession {self.session_name} for user {self.user.username}"
+        return f"ChatSession {self.session_name} for user {self.user.email}"
     
 class ChatMessage(models.Model):
     session = models.ForeignKey(ChatSession, related_name='messages', on_delete=models.CASCADE)

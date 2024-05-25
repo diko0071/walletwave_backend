@@ -11,31 +11,39 @@ from .services import ai_reponse
 import json
 
 
+@permission_classes([IsAuthenticated])
 @api_view(['GET'])
 def get_all_chat_sessions(request):
-    chat_sessions = ChatSession.objects.all()
+    user = request.user
+    chat_sessions = ChatSession.objects.filter(user=user)
     serializer = ChatSessionSerializer(chat_sessions, many=True)
 
     return Response(serializer.data)
 
+
+@permission_classes([IsAuthenticated])
 @api_view(['GET'])
 def get_chat_session(request, pk):
-    chat_session = get_object_or_404(ChatSession, pk=pk)
+    user = request.user
+    chat_session = get_object_or_404(ChatSession, pk=pk, user=user)
     serializer = ChatSessionSerializer(chat_session)
     return Response(serializer.data)
 
-
+@permission_classes([IsAuthenticated])
 @api_view(['POST'])
 def create_chat_session(request):
+    user = request.user
     serializer = ChatSessionSerializer(data=request.data)
     if serializer.is_valid():
-        serializer.save()
+        serializer.save(user=user)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     return Response(serializer.data)
 
+@permission_classes([IsAuthenticated])
 @api_view(['POST'])
 def get_answer(request, pk):
-    chat_session = get_object_or_404(ChatSession, pk=pk)
+    user = request.user
+    chat_session = get_object_or_404(ChatSession, pk=pk, user=user)
     
     serializer = ChatMessageSerializer(data=request.data)
     if serializer.is_valid():
