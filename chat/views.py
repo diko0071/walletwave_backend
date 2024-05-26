@@ -32,12 +32,13 @@ def get_chat_session(request, pk):
 @permission_classes([IsAuthenticated])
 @api_view(['POST'])
 def create_chat_session(request):
-    user = request.user
-    serializer = ChatSessionSerializer(data=request.data)
+    data = request.data.copy()
+    data['user'] = request.user.pk
+    serializer = ChatSessionSerializer(data=data)
     if serializer.is_valid():
-        serializer.save(user=user)
+        serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
-    return Response(serializer.data)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @permission_classes([IsAuthenticated])
 @api_view(['POST'])

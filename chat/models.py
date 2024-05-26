@@ -3,6 +3,7 @@ from useraccount.models import User
 import requests
 import os
 import uuid
+from .services import create_ai_title_for_session
 
 class AIModel(models.TextChoices):
     GPT_4_TURBO = 'gpt-4-turbo'
@@ -10,7 +11,7 @@ class AIModel(models.TextChoices):
 
 class ChatSession(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='chat_sessions')
-    session_name = models.CharField(max_length=255)
+    session_name = models.CharField(max_length=255, default='New chat')
     session_id = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -19,8 +20,15 @@ class ChatSession(models.Model):
     previous_messages = models.JSONField(blank=True, default=list)
     system_message = models.TextField(blank=True, default='')
 
+
+    def save(self, *args, **kwargs):
+        if not self.session_name and self.previous_messages:
+            self.session_name = create_ai_title_for_session(self.previous_messages)
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return f"ChatSession {self.session_name} for user {self.user.email}"
+    
     
 class ChatMessage(models.Model):
     session = models.ForeignKey(ChatSession, related_name='messages', on_delete=models.CASCADE)
