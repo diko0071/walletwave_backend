@@ -6,5 +6,7 @@ urlpatterns = [
     path('chat/<int:pk>/', get_chat_session, name='get_chat_session'),
     path('chat/create/', create_chat_session, name='create_chat_session'),
     path('chat/<int:pk>/answer/', get_answer, name='get_answer'),
+    path('chat/<int:pk>/update/', update_chat_session, name='update_chat_session'),
+    path('chat/<int:pk>/delete/', delete_chat_session, name='delete_chat_session'),
 ]
 

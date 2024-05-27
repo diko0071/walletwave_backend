@@ -41,6 +41,26 @@ def create_chat_session(request):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @permission_classes([IsAuthenticated])
+@api_view(['PUT'])
+def update_chat_session(request, pk):
+    user = request.user
+    chat_session = get_object_or_404(ChatSession, pk=pk, user=user)
+    serializer = ChatSessionSerializer(chat_session, data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    else:
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+@permission_classes([IsAuthenticated])
+@api_view(['DELETE'])
+def delete_chat_session(request, pk):
+    user = request.user
+    chat_session = get_object_or_404(ChatSession, pk=pk, user=user)
+    chat_session.delete()
+    return Response({'message': 'Chat was deleted successfully!'}, status=status.HTTP_204_NO_CONTENT)
+
+@permission_classes([IsAuthenticated])
 @api_view(['POST'])
 def get_answer(request, pk):
     user = request.user

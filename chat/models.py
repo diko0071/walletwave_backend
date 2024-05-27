@@ -22,7 +22,7 @@ class ChatSession(models.Model):
 
 
     def save(self, *args, **kwargs):
-        if not self.session_name and self.previous_messages:
+        if self.session_name == "New chat" and self.previous_messages:
             self.session_name = create_ai_title_for_session(self.previous_messages)
         super().save(*args, **kwargs)
 
