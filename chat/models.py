@@ -11,7 +11,7 @@ class AIModel(models.TextChoices):
 
 class ChatSession(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='chat_sessions')
-    session_name = models.CharField(max_length=255, default='New chat')
+    session_name = models.CharField(max_length=500, default='New chat')
     session_id = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -23,7 +23,7 @@ class ChatSession(models.Model):
 
     def save(self, *args, **kwargs):
         if self.session_name == "New chat" and self.previous_messages:
-            self.session_name = create_ai_title_for_session(self.previous_messages)
+            self.session_name = create_ai_title_for_session(self.previous_messages).content
         super().save(*args, **kwargs)
 
     def __str__(self):
@@ -44,7 +44,7 @@ class ChatMessage(models.Model):
         return self.session.system_message
     
 class SystemMessage(models.Model):
-    name = models.CharField(max_length=100, unique=True)
+    name = models.CharField(max_length=1000, unique=True)
     prompt = models.TextField()
 
     def __str__(self):

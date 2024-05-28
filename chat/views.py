@@ -45,7 +45,9 @@ def create_chat_session(request):
 def update_chat_session(request, pk):
     user = request.user
     chat_session = get_object_or_404(ChatSession, pk=pk, user=user)
-    serializer = ChatSessionSerializer(chat_session, data=request.data)
+    data = request.data.copy()
+    data['user'] = user.pk
+    serializer = ChatSessionSerializer(chat_session, data=data)
     if serializer.is_valid():
         serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
