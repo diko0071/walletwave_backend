@@ -25,6 +25,7 @@ from django.core.cache import cache
 from django_celery_beat.models import PeriodicTask, PeriodicTasks, CrontabSchedule
 from .tasks import create_transaction_and_update_next_charge_date
 from datetime import datetime
+from chat.prompts import ai_transaction_converter_prompt
 
 def clear_cache():
     cache.clear()
@@ -155,7 +156,7 @@ def create_ai_transactions(request):
 
     system_message = ""
     try:
-        system_message = SystemMessage.objects.get(name="ai_transaction_converter").prompt
+        system_message = ai_transaction_converter_prompt
         system_message = system_message + "Use currency by default (ONLY if user didn't specify currency)" + request.user.currency
     except SystemMessage.DoesNotExist:
         pass
