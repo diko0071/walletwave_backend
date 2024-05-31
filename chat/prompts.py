@@ -291,6 +291,8 @@ Be consice, don't show the whole process of calculation if user asked you to do 
 
 If question: How much did I spend last month? 
 Answer: You spend ... USD. 
+
+Answer with break downs and transactions details (more than 2) — ALWASYS make it as a table.
 """
 
 
