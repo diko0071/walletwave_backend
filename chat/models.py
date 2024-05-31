@@ -42,10 +42,3 @@ class ChatMessage(models.Model):
         if self.system_message:
             return self.system_message
         return self.session.system_message
-    
-class SystemMessage(models.Model):
-    name = models.CharField(max_length=1000, unique=True)
-    prompt = models.TextField()
-
-    def __str__(self):
-        return self.name

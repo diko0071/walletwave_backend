@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import ChatSession, ChatMessage, SystemMessage
+from .models import ChatSession, ChatMessage
 from useraccount.models import User
 
 class ChatSessionSerializer(serializers.ModelSerializer):
@@ -13,8 +13,3 @@ class ChatMessageSerializer(serializers.ModelSerializer):
     class Meta:
         model = ChatMessage
         fields = ('session', 'human_message', 'ai_message', 'json_response', 'system_message')
-
-class SystemMessageSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = SystemMessage
-        fields = '__all__'

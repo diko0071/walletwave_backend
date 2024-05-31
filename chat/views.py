@@ -1,8 +1,8 @@
 from django.shortcuts import render
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from .serializers import ChatSessionSerializer, ChatMessageSerializer, SystemMessageSerializer
-from .models import ChatSession, ChatMessage, SystemMessage
+from .serializers import ChatSessionSerializer, ChatMessageSerializer
+from .models import ChatSession, ChatMessage
 from transaction.models import Transaction
 from transaction.serializers import TransactionSummarySerializer
 from django.shortcuts import get_object_or_404

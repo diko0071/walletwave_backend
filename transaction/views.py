@@ -9,8 +9,6 @@ from django.db.models import Count, Q, Sum
 from .filters import TransactionsFilter
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import permission_classes
-from chat.serializers import SystemMessageSerializer
-from chat.models import SystemMessage
 from django.forms.models import model_to_dict
 from django.db import transaction as db_transaction
 from .services import ai_transaction_converter
