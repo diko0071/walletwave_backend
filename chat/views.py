@@ -3,11 +3,15 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from .serializers import ChatSessionSerializer, ChatMessageSerializer, SystemMessageSerializer
 from .models import ChatSession, ChatMessage, SystemMessage
+from transaction.models import Transaction
+from transaction.serializers import TransactionSummarySerializer
 from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import permission_classes
 from .services import ai_reponse
+from .prompts import personal_finance_assistant_prompt
+from .services import validate_question
 import json
 
 
@@ -67,17 +71,20 @@ def delete_chat_session(request, pk):
 def get_answer(request, pk):
     user = request.user
     chat_session = get_object_or_404(ChatSession, pk=pk, user=user)
+
+    transaction = Transaction.objects.filter(user=user)
+    transaction_serializer = TransactionSummarySerializer(transaction, many=True)
+    get_transaction_data = transaction_serializer.data
     
     serializer = ChatMessageSerializer(data=request.data)
     if serializer.is_valid():
         chat_message = serializer.save(session=chat_session, system_message=chat_session.system_message)
         
-        try:
-            serializer = SystemMessageSerializer(SystemMessage.objects.get(name="Global"))
-            system_message = serializer.data['prompt']
-        except SystemMessage.DoesNotExist:
-            system_message = ""
-
+        if validate_question(chat_message.human_message) == 1:
+            system_message = personal_finance_assistant_prompt + json.dumps(get_transaction_data)
+        else:
+            system_message = personal_finance_assistant_prompt
+        
         previous_messages = chat_session.previous_messages if chat_session.previous_messages else []
         
         aimessage_response = ai_reponse(

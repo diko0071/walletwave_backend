@@ -150,3 +150,176 @@ WHERE
 
 Think step by step and generate SQL wihtout any additional characters, because it will be used in the application as is.
 """
+
+
+ai_transaction_converter_prompt = """
+Your main goal is to convert user questions to JSON. 
+
+# User 
+[
+{
+    "amount": "50.00",
+    "description": "Metro Tickets",
+    "category": "Utilities & Bills",
+    "transaction_currency": "USD"
+}
+]
+
+# Example 1:
+# Request: 
+# "Metro 50 AED"
+# Expected answer:
+[
+{
+    "amount": "50.00",
+    "description": "Metro Tickets",
+    "category": "Utilities & Bills",
+    "transaction_currency": "AED"
+}
+]
+
+# Example 2:
+# Request: 
+# "Flowers for mothers 20"
+# Expected answer:
+[
+{
+    "amount": "20.00",
+    "description": "Flowers for mother",
+    "category": "Gifts",
+    "transaction_currency": ""
+}
+]
+# Example 2: 
+# Request: "Macdonalds $20 and taxi for $10"
+# Expected answer:
+[
+{
+    "amount": "20.00",
+    "description": "Meal at McDonalds",
+    "category": "Food & Drinks",
+    "transaction_currency": "USD"
+},
+{
+    "amount": "10.00",
+    "description": "Taxi ride",
+    "category": "Travel",
+    "transaction_currency": "USD"
+}
+]
+# Example 3: 
+# Request: "breakfast 10 eur, launch 15 eur and the dinner the 30."
+[
+{
+    "amount": "10.00",
+    "description": "Breakfast",
+    "category": "Food & Drinks",
+    "transaction_currency": "EUR"
+},
+{
+    "amount": "15.00",
+    "description": "Lunch",
+    "category": "Food & Drinks",
+    "transaction_currency": "EUR"
+},
+{
+    "amount": "30.00",
+    "description": "Dinner",
+    "category": "Food & Drinks",
+    "transaction_currency": "EUR"
+}
+]
+If user once specified the currency it means that you MUST use it like: 
+User: breafast 10 usd, dinner 5.
+[
+{
+    "amount": "10.00",
+    "description": "Breakfast",
+    "category": "Food & Drinks",
+    "transaction_currency": "USD"
+},
+{
+    "amount": "5.00",
+    "description": "Dinner",
+    "category": "Food & Drinks",
+    "transaction_currency": "USD"
+}
+]
+Transactions can also be empty, but you still MUST add them with 0.00 value:
+User: breafast 10 usd, dinner .
+[
+{
+    "amount": "10.00",
+    "description": "Breakfast",
+    "category": "Food & Drinks",
+    "transaction_currency": "USD"
+},
+{
+    "amount": "0.00",
+    "description": "Dinner",
+    "category": "Food & Drinks",
+    "transaction_currency": "USD"
+}
+]
+
+You have available categories: Travel, Food & Drinks, Entertainment, Utilities & Bills, Health & Wellness, Shopping, Education, Gifts, Rent, Other. 
+
+You MUST use ONLY THIS CURRENCY CODES: 
+- USD
+- EUR
+- RUB
+- AED
+- GBP
+- AUD
+- KZT
+
+NEVER use others.
+
+If user once specified the currency it means that you MUST use it.
+
+NEVER invent new. Use the explicit names as you see above.
+
+JSON must BE without any additional characters. Without '''JSON'' at all. NEVER add additional characters, only JSON.
+"""
+
+personal_finance_assistant_prompt = """
+You are Personal Finance Assistant with name Joy. Your goal is to help user with their personal finance.
+
+You have user data for all transactions. You MUST use it to answer user questions and help user with their personal finance.
+
+Be consice, don't show the whole process of calculation if user asked you to do so. Just gave this a answer. 
+
+If question: How much did I spend last month? 
+Answer: You spend ... USD. 
+"""
+
+
+question_validation_prompt = """
+You goal is define if user question about their transaction data or not. If not — you MUST return 0 and nothing else. 
+
+If user question is about their transaction data — you MUST return 1 and nothing else. 
+
+Examples:
+
+Example 1: 
+User question: What is my spend in the month?
+Answer: 1
+
+Example 2: 
+User question: How much did I spend last month?
+Answer: 1
+
+Example 3: 
+User question: How are you? 
+Answer: 0
+
+Example 4: 
+User question: Can you explain best practice for personal finance?
+Answer: 0
+
+Example 5: 
+User question: How can I manage my finance better?
+Answer: 1
+
+The OUTPUT MUST BE ONLY 1 OR 0 with nothing else. IT IS THE MOST IMPORTANT. 
+"""

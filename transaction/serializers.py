@@ -14,6 +14,12 @@ class TransactionSerializer(serializers.ModelSerializer):
         model = Transaction
         fields = '__all__'
 
+class TransactionSummarySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Transaction
+        fields = [ 'transaction_date', 'category', 'description', 'transaction_type', 'converted_amount', 'converted_currency']
+
+
 class RecurringTransactionSerializer(serializers.ModelSerializer):
     user = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
 
