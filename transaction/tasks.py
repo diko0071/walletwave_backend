@@ -48,7 +48,6 @@ def create_transaction_and_update_next_charge_date(recurring_transaction_id):
 
 @shared_task(name='transaction.tasks.email_before_reccuring_transaction')
 def email_before_reccuring_transaction(user_id, transaction_id):
-    print(f'Email before recurring transaction for user_id: {user_id}')
     from useraccount.models import User
     from .models import RecurringTransaction
 

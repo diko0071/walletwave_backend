@@ -4,6 +4,7 @@ import requests
 import uuid 
 from django.conf import settings
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, UserManager
+from .tasks import email_welcome
 
 
 class CustomUserManager(UserManager):
