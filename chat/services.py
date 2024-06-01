@@ -3,7 +3,6 @@ from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage, SystemMessage
 from .prompts import text_to_sql_prompt, question_validation_prompt
 
-
 dotenv.load_dotenv()
 
 llm = ChatOpenAI(model_name="gpt-4o-2024-05-13", temperature=0)
