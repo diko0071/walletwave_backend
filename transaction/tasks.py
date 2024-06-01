@@ -4,6 +4,9 @@ from django.utils import timezone
 import calendar
 from django_celery_beat.models import PeriodicTask, PeriodicTasks, CrontabSchedule
 from datetime import datetime
+import os
+import requests
+
 
 @shared_task(name='transaction.tasks.create_transaction_and_update_next_charge_date')
 def create_transaction_and_update_next_charge_date(recurring_transaction_id):
@@ -41,3 +44,41 @@ def create_transaction_and_update_next_charge_date(recurring_transaction_id):
             print(f'This new next charge date: {next_charge_date}')
             recurring_transaction.next_charge_date = next_charge_date
             recurring_transaction.save(update_fields=['next_charge_date'])
+
+
+@shared_task(name='transaction.tasks.email_before_reccuring_transaction')
+def email_before_reccuring_transaction(user_id, transaction_id):
+    print(f'Email before recurring transaction for user_id: {user_id}')
+    from useraccount.models import User
+    from .models import RecurringTransaction
+
+    user = User.objects.get(id=user_id)
+    email, name = user.email, user.name
+
+    recurring_transactions = RecurringTransaction.objects.filter(user_id=user_id, id=transaction_id)
+
+    for transaction in recurring_transactions:
+        description, amount, currency = transaction.description, transaction.amount, transaction.currency
+    
+    url = "https://app.loops.so/api/v1/transactional"
+
+    if name is None:
+        name = ""
+
+    payload = {
+        "transactionalId": "clwvbrtz901k0lb4dxysn046m",
+        "email": email,
+        "dataVariables": {
+            "name": name,
+            "description": description,
+            "amount": int(amount),
+            "currency": currency,
+        }
+    }
+    headers = {
+        "Authorization": f"Bearer {os.getenv('LOOPS_API_KEY')}",
+        "Content-Type": "application/json"
+    }
+
+    response = requests.request("POST", url, json=payload, headers=headers)
+    return response.json()

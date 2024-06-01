@@ -5,6 +5,7 @@ from django_celery_beat.models import PeriodicTask, CrontabSchedule
 from django.utils import timezone
 import json 
 import uuid
+import calendar
 from .tasks import create_transaction_and_update_next_charge_date
 
 class TransactionSerializer(serializers.ModelSerializer):
@@ -30,6 +31,7 @@ class RecurringTransactionSerializer(serializers.ModelSerializer):
     def save(self, **kwargs):
         instance = super().save(**kwargs)
         self.create_or_update_periodic_task(instance)
+        self.create_or_update_email_notification_task(instance)
         return instance
 
     def create_or_update_periodic_task(self, instance):
@@ -63,4 +65,53 @@ class RecurringTransactionSerializer(serializers.ModelSerializer):
             name=task_name,
             task=task,
             args=json.dumps([instance.id]),
+        )
+
+
+    def create_or_update_email_notification_task(self, instance):
+        existing_tasks = PeriodicTask.objects.filter(name__contains=f"Email Notification - transaction_id: {instance.id}")
+
+        if existing_tasks.exists():
+            existing_tasks.delete()
+            
+        self.create_email_notification_task(instance)
+
+    
+    def create_email_notification_task(self, instance):
+
+        current_month = timezone.now().month
+        current_year = timezone.now().year
+
+        if current_month == 1:
+            previous_month = 12
+            previous_year = current_year - 1
+        else:
+            previous_month = current_month - 1
+            previous_year = current_year
+       
+        _, last_day = calendar.monthrange(previous_year, previous_month)
+
+        if instance.charge_day == 1:
+            day_of_month = str(last_day - 1)
+        elif instance.charge_day == 2:
+            day_of_month = str(last_day)
+        else:
+            day_of_month = str(instance.charge_day - 2)
+
+
+        schedule, created = CrontabSchedule.objects.get_or_create(
+            minute='*',
+            hour='*',
+            day_of_month=day_of_month,
+            month_of_year='*',
+            day_of_week='*',
+        )
+
+        task_name = f"Email Notification - transaction_id: {instance.id}, task_id: {uuid.uuid4()}"
+        task = 'transaction.tasks.email_before_reccuring_transaction'
+        PeriodicTask.objects.create(
+            crontab=schedule,
+            name=task_name,
+            task=task,
+            args=json.dumps([str(instance.user_id), instance.id]), 
         )
