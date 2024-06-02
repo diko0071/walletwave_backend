@@ -24,6 +24,7 @@ from django_celery_beat.models import PeriodicTask, PeriodicTasks, CrontabSchedu
 from .tasks import create_transaction_and_update_next_charge_date
 from datetime import datetime
 from chat.prompts import ai_transaction_converter_prompt
+from django.db.models.functions import TruncMonth, TruncDay
 
 def clear_cache():
     cache.clear()
@@ -86,61 +87,61 @@ def get_transactions_stat(request):
     user_transactions = Transaction.objects.filter(user=user)
 
     now = timezone.now().date()
-    
     current_month_start = now.replace(day=1)
     last_day_of_current_month = calendar.monthrange(now.year, now.month)[1]
     current_month_end = now.replace(day=last_day_of_current_month)
-    
-    previous_month_date = current_month_start - timedelta(days=1)
-    previous_month_start = previous_month_date.replace(day=1)
-    last_day_of_previous_month = calendar.monthrange(previous_month_date.year, previous_month_date.month)[1]
-    previous_month_end = previous_month_date.replace(day=last_day_of_previous_month)
-    
-    current_week_start = now - timedelta(days=now.weekday())
-    current_week_end = current_week_start + timedelta(days=6)
-    
-    previous_week_start = current_week_start - timedelta(days=7)
-    previous_week_end = current_week_end - timedelta(days=7)
 
-    today_start = now
-    today_end = now
-    yesterday_start = today_start - timedelta(days=1)
-    yesterday_end = yesterday_start
+    user_recurring_transactions = RecurringTransaction.objects.filter(
+        user=user,
+        next_charge_date__range=[current_month_start, current_month_end]
+    ).values('next_charge_date', 'amount', 'description')
 
-    today_sum = user_transactions.filter(transaction_date__range=[today_start, today_end]).aggregate(total_sum=Sum('converted_amount'))['total_sum'] or 0
-    yesterday_sum = user_transactions.filter(transaction_date__range=[yesterday_start, yesterday_end]).aggregate(total_sum=Sum('converted_amount'))['total_sum'] or 0
-    daily_change = round(((today_sum - yesterday_sum) / yesterday_sum * 100) if yesterday_sum != 0 else 0, 2)
-    daily_change_absolute = round(today_sum - yesterday_sum, 2)
+    total_upcoming_transactions_sum = RecurringTransaction.objects.filter(
+        user=user,
+        next_charge_date__range=[current_month_start, current_month_end]
+    ).aggregate(total_sum=Sum('amount'))['total_sum'] or 0
 
-    monthly_sum = user_transactions.filter(transaction_date__range=[current_month_start, current_month_end]).aggregate(total_sum=Sum('converted_amount'))['total_sum'] or 0
-    previous_month_sum = user_transactions.filter(transaction_date__range=[previous_month_start, previous_month_end]).aggregate(total_sum=Sum('converted_amount'))['total_sum'] or 0
-    monthly_change = round(((monthly_sum - previous_month_sum) / previous_month_sum * 100) if previous_month_sum != 0 else 0, 2)
-    
-    weekly_sum = user_transactions.filter(transaction_date__range=[current_week_start, current_week_end]).aggregate(total_sum=Sum('converted_amount'))['total_sum'] or 0
-    previous_week_sum = user_transactions.filter(transaction_date__range=[previous_week_start, previous_week_end]).aggregate(total_sum=Sum('converted_amount'))['total_sum'] or 0
-    weekly_change = round(((weekly_sum - previous_week_sum) / previous_week_sum * 100) if previous_week_sum != 0 else 0, 2)
-    
-    current_month_transactions_count = user_transactions.filter(transaction_date__range=[current_month_start, current_month_end]).count()
-    previous_month_transactions_count = user_transactions.filter(transaction_date__range=[previous_month_start, previous_month_end]).count()
-    transactions_count_change = round(((current_month_transactions_count - previous_month_transactions_count) / previous_month_transactions_count * 100) if previous_month_transactions_count != 0 else 0, 2)
-    
-    top_category_current_month = user_transactions.filter(transaction_date__range=[current_month_start, current_month_end]).values('category').annotate(total=Count('id')).order_by('-total').first()
-    top_category_previous_month = user_transactions.filter(transaction_date__range=[previous_month_start, previous_month_end]).values('category').annotate(total=Count('id')).order_by('-total').first()
+    transactions_by_category = user_transactions.filter(
+        transaction_date__range=[current_month_start, current_month_end]
+    ).values('category').annotate(total_sum=Sum('converted_amount')).order_by('-total_sum')
 
+    total_monthly_sum = user_transactions.filter(
+        transaction_date__range=[current_month_start, current_month_end]
+    ).aggregate(total_sum=Sum('converted_amount'))['total_sum'] or 0
+
+    sum_transactions_by_month = user_transactions.annotate(month=TruncMonth('transaction_date')).values('month').annotate(month_sum=Sum('converted_amount')).order_by('month')
+    
+    monthly_transactions_details = user_transactions.filter(
+        transaction_date__range=[current_month_start, current_month_end]
+    ).values('transaction_date').annotate(total_sum=Sum('converted_amount')).order_by('transaction_date')
+
+    top_category_current_month = transactions_by_category.first()
+    
+    previous_month_end = current_month_start - timedelta(days=1)
+    previous_month_start = previous_month_end.replace(day=1)
+    same_period_last_month_end = previous_month_end.replace(day=now.day)
+
+    total_same_period_last_month_sum = user_transactions.filter(
+        transaction_date__range=[previous_month_start, same_period_last_month_end]
+    ).aggregate(total_sum=Sum('converted_amount'))['total_sum'] or 0
+
+    monthly_change_absolute = total_monthly_sum - total_same_period_last_month_sum
+    monthly_change_percentage = ((total_monthly_sum - total_same_period_last_month_sum) / total_same_period_last_month_sum * 100) if total_same_period_last_month_sum != 0 else 0
 
     data = {
-        'monthly_sum': monthly_sum,
-        'monthly_change': monthly_change,
-        'weekly_sum': weekly_sum,
-        'weekly_change': weekly_change,
-        'transactions_count': current_month_transactions_count,
-        'transactions_count_change': transactions_count_change,
+        'transactions_by_category': list(transactions_by_category),
+        'total_monthly_sum': total_monthly_sum,
+        'monthly_transactions_details': list(monthly_transactions_details),
+        'transactions_by_month': list(sum_transactions_by_month),
         'top_category_current_month': top_category_current_month,
-        'top_category_previous_month': top_category_previous_month,
-        'today_sum': today_sum,
-        'yesterday_sum': yesterday_sum,
-        'daily_change': daily_change,
-        'daily_change_absolute': daily_change_absolute,
+        'monthly_sum_comparison': {
+            'current_month_sum': total_monthly_sum,
+            'previous_month_sum': total_same_period_last_month_sum,
+            'absolute_change': monthly_change_absolute,
+            'percentage_change': monthly_change_percentage,
+        },
+        'upcoming_recurring_transactions': list(user_recurring_transactions),
+        'total_upcoming_transactions_sum': total_upcoming_transactions_sum
     }
 
     return Response(data)
