@@ -6,11 +6,12 @@ import os
 from useraccount.models import User
 from .models import RecurringTransaction
 
-
 dotenv.load_dotenv()
 
+llm = ChatOpenAI(model_name="gpt-4o-2024-05-13", temperature=0)
+
 def ai_transaction_converter(human_message, system_message):
-    chat = ChatOpenAI(model_name="gpt-4-turbo-preview", temperature=0)
+    chat = llm
     messages = [
     SystemMessage(
         content=f'{system_message}'
