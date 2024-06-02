@@ -152,12 +152,9 @@ def create_ai_transactions(request):
     if not text_input:
         return Response({"error": "Text input is required"}, status=status.HTTP_400_BAD_REQUEST)
 
-    system_message = ""
-    try:
-        system_message = ai_transaction_converter_prompt
-        system_message = system_message + "Use currency by default (ONLY if user didn't specify currency)" + request.user.currency
-    except SystemMessage.DoesNotExist:
-        pass
+    system_message = ai_transaction_converter_prompt
+    
+    system_message = system_message + "Use currency by default (ONLY if user didn't specify currency)" + request.user.currency
 
     ai_response = ai_transaction_converter(text_input, system_message).content
     try:
