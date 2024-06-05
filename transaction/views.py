@@ -91,6 +91,16 @@ def get_transactions_stat(request):
     last_day_of_current_month = calendar.monthrange(now.year, now.month)[1]
     current_month_end = now.replace(day=last_day_of_current_month)
 
+    today_sum = user_transactions.filter(transaction_date=now).aggregate(total_sum=Sum('converted_amount'))['total_sum'] or 0
+    
+    yesterday = now - timedelta(days=1)
+    yesterday_sum = user_transactions.filter(transaction_date=yesterday).aggregate(total_sum=Sum('converted_amount'))['total_sum'] or 0
+
+    daily_change = ((today_sum - yesterday_sum) / yesterday_sum * 100) if yesterday_sum != 0 else 0
+   
+    daily_change_absolute = abs(today_sum - yesterday_sum)
+
+
     user_recurring_transactions = RecurringTransaction.objects.filter(
         user=user,
         next_charge_date__range=[current_month_start, current_month_end]
@@ -141,7 +151,11 @@ def get_transactions_stat(request):
             'percentage_change': monthly_change_percentage,
         },
         'upcoming_recurring_transactions': list(user_recurring_transactions),
-        'total_upcoming_transactions_sum': total_upcoming_transactions_sum
+        'total_upcoming_transactions_sum': total_upcoming_transactions_sum,
+        'today_sum': today_sum,
+        'yesterday_sum': yesterday_sum,
+        'daily_change': daily_change,
+        'daily_change_absolute': daily_change_absolute
     }
 
     return Response(data)
