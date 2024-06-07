@@ -33,6 +33,11 @@ class RecurringTransactionSerializer(serializers.ModelSerializer):
         self.create_or_update_periodic_task(instance)
         self.create_or_update_email_notification_task(instance)
         return instance
+    
+    def delete(self, instance):
+        PeriodicTask.objects.filter(name__contains=f"transaction_id: {instance.id}").delete()
+        PeriodicTask.objects.filter(name__contains=f"Email Notification - transaction_id: {instance.id}").delete()
+        super().delete(instance)
 
     def create_or_update_periodic_task(self, instance):
         existing_tasks = PeriodicTask.objects.filter(name__contains=f"transaction_id: {instance.id}")
