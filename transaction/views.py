@@ -100,11 +100,10 @@ def get_transactions_stat(request):
    
     daily_change_absolute = abs(today_sum - yesterday_sum)
 
-
     user_recurring_transactions = RecurringTransaction.objects.filter(
         user=user,
         next_charge_date__range=[current_month_start, current_month_end]
-    ).values('next_charge_date', 'amount', 'description')
+    ).values('next_charge_date', 'amount', 'description', 'currency')
 
     total_upcoming_transactions_sum = RecurringTransaction.objects.filter(
         user=user,
