@@ -45,6 +45,8 @@ docker-compose build
 docker-compose up
 ```
 
+Open [http://localhost:8000](http://localhost:8000) with your browser to see the result.
+
 ## Project Featuers 
 
 ### AI Transaction Tracker
