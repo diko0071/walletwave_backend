@@ -1,13 +1,18 @@
-# Wallet Wave is open-source AI-powered transaction tracker. 
+# Wallet Wave is AI-powered transaction tracker. 
 
-[![Demo](/docs/loom_preview.png)](https://www.loom.com/share/f4a399d6827f4413bd8f2f0b65b56043)
+[[Lazy](/docs/lazy.png)]
+
+See the short [Demo video](https://www.loom.com/share/f4a399d6827f4413bd8f2f0b65b56043).
+
+## Frontned Part 
+[Click here to open fronend repository](https://github.com/diko0071/walletwave_frontend)
 
 ## Getting started
 To get started with Wallet Wave backend, follow these simple steps:
 
 ### 1. Clone the repository
 ```bash
-git clone https://github.com/walletwave_backend.git
+git clone https://github.com/diko0071/walletwave_backend.git
 ```
 
 ### 2. Add .env file 
@@ -45,8 +50,13 @@ docker-compose up
 ### AI Transaction Tracker
 Simple call to OpenAI API to convert natural lanugage input to structured JSON and add it to the database. 
 
+[![Dash](/docs/dashb.png)]
+
 ### Reccuring Transaction Tracker
 Celery & Celery Beat for tracking reccuring transaction day — automatically add them into the transaction db and also for email notificitions 2 days before transaction charge day. 
+
+[![Track](/docs/track.png)]
+
 
 ### Chat 
 2 call to OpenAI to be answer on user question. 
@@ -56,13 +66,7 @@ Celery & Celery Beat for tracking reccuring transaction day — automatically ad
 
 It also store the previous messages, they leave on the chat level in db.
 
+[![Assit](/docs/assit.png)]
+
 ## License
 Distributed under the MIT License. See [LICENSE](https://github.com/diko0071/walletwave_backend/blob/main/LICENSE.txt) for more information.
-
-
-
-
-
-
-
-
