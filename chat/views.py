@@ -76,6 +76,9 @@ def get_answer(request, pk):
     transaction_serializer = TransactionSummarySerializer(transaction, many=True)
     get_transaction_data = transaction_serializer.data
     api_key = request.user.openai_key
+
+    if not api_key:
+        return Response({"error": "No API key provided. Please provide a valid OpenAI API key."}, status=status.HTTP_400_BAD_REQUEST)
     
     serializer = ChatMessageSerializer(data=request.data)
     if serializer.is_valid():
