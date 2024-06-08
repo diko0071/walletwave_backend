@@ -20,10 +20,9 @@ class ChatSession(models.Model):
     previous_messages = models.JSONField(blank=True, default=list)
     system_message = models.TextField(blank=True, default='')
 
-
     def save(self, *args, **kwargs):
         if self.session_name == "New chat" and self.previous_messages:
-            self.session_name = create_ai_title_for_session(self.previous_messages).content
+            self.session_name = create_ai_title_for_session(self.previous_messages, self.user.openai_key).content
         super().save(*args, **kwargs)
 
     def __str__(self):

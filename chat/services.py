@@ -5,9 +5,9 @@ from .prompts import text_to_sql_prompt, question_validation_prompt
 
 dotenv.load_dotenv()
 
-llm = ChatOpenAI(model_name="gpt-4o-2024-05-13", temperature=0)
+def ai_reponse(human_message, system_message, previous_messages=None, api_key=None):
 
-def ai_reponse(human_message, system_message, previous_messages=None):
+    llm = ChatOpenAI(model_name="gpt-4o-2024-05-13", temperature=0, api_key=api_key)
     chat = llm
     messages = [
     SystemMessage(
@@ -18,7 +18,8 @@ def ai_reponse(human_message, system_message, previous_messages=None):
     return chat.invoke(messages)
 
 
-def create_ai_title_for_session(previous_messages):
+def create_ai_title_for_session(previous_messages, api_key):
+    llm = ChatOpenAI(model_name="gpt-4o-2024-05-13", temperature=0, api_key=api_key)
     chat = llm
     system_message = 'Your goal is create chat name based on previous message. The chat name should be summary of the previous messages requests. It should be NOT more than 3 WORDS ONLY. BE VERY CONSICE AND SHORT, but in the same time be very obverse and create name which will explain what is the topic of the chat'
     messages = [
@@ -29,18 +30,11 @@ def create_ai_title_for_session(previous_messages):
         ]
     return chat.invoke(messages)
 
-def text_to_sql(human_message, user_id):
-    system_message = text_to_sql_prompt
-    question = human_message
-
-    sql_query = ai_reponse(question, system_message)
-
-    return sql_query
-
-def validate_question(human_message):
+def validate_question(human_message, api_key):
     system_message = question_validation_prompt
     question = human_message
 
-    answer = ai_reponse(question, system_message)
+    answer = ai_reponse(question, system_message, api_key)
 
     return int(answer.content)
+

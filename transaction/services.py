@@ -6,11 +6,9 @@ import os
 from useraccount.models import User
 from .models import RecurringTransaction
 
-dotenv.load_dotenv()
+def ai_transaction_converter(human_message, system_message, api_key):
 
-llm = ChatOpenAI(model_name="gpt-4o-2024-05-13", temperature=0)
-
-def ai_transaction_converter(human_message, system_message):
+    llm = ChatOpenAI(model_name="gpt-4o-2024-05-13", temperature=0, api_key=api_key)
     chat = llm
     messages = [
     SystemMessage(

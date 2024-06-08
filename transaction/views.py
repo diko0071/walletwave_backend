@@ -170,7 +170,12 @@ def create_ai_transactions(request):
     
     system_message = system_message + "Use currency by default (ONLY if user didn't specify currency)" + request.user.currency
 
-    ai_response = ai_transaction_converter(text_input, system_message).content
+    api_key = request.user.openai_key
+
+    if not api_key:
+        return Response({"error": "No API key provided. Please provide a valid OpenAI API key."}, status=status.HTTP_400_BAD_REQUEST)
+
+    ai_response = ai_transaction_converter(text_input, system_message, api_key).content
     try:
         transactions_data = json.loads(ai_response)
         if isinstance(transactions_data, dict):
