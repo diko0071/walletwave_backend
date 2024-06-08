@@ -151,12 +151,14 @@ CORS_ALLOWED_ORIGINS = [
     'https://walletwave-079e0ff9a62d.herokuapp.com',
     'https://walletwave.app',
     'https://walletwave-nu.vercel.app',
+    'walletwave-079e0ff9a62d.herokuapp.com',
 ]
 
 CSRF_TRUSTED_ORIGINS = [
     'http://127.0.0.1:8000',
     'http://127.0.0.1:3000',                     
     'https://walletwave-079e0ff9a62d.herokuapp.com',
+    'walletwave-079e0ff9a62d.herokuapp.com',
     'https://walletwave.app',
     'https://walletwave-nu.vercel.app',
 
@@ -167,6 +169,7 @@ CORS_ORIGINS_WHITELIST = [
     'https://walletwave-079e0ff9a62d.herokuapp.com',
     'https://walletwave-nu.vercel.app',
     'https://walletwave.app',
+    'walletwave-079e0ff9a62d.herokuapp.com',
 ]
 
 CORS_ALLOW_ALL_ORIGINS = True
