@@ -66,7 +66,12 @@ Celery & Celery Beat for tracking reccuring transaction day — automatically ad
 
 It also store the previous messages, they leave on the chat level in db.
 
-![Assit](/docs/assit.png)
+![Assist](/docs/assist.png)
 
 ## License
 Distributed under the MIT License. See [LICENSE](https://github.com/diko0071/walletwave_backend/blob/main/LICENSE.txt) for more information.
+
+## Contact
+- [X](https://x.com/korzhov_dm)
+- [LinkedIn](https://www.linkedin.com/in/korzhovdm/)
+- korzhov.work2019@gmail.com
