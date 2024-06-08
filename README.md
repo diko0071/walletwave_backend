@@ -50,6 +50,12 @@ docker-compose up
 ### AI Transaction Tracker
 Simple call to OpenAI API to convert natural lanugage input to structured JSON and add it to the database. 
 
+![Lazy](/docs/lazy.png)
+
+
+### Dashboard
+Simple dashboard to visualize the transactions and couple existing components for tables to display the transactions.
+
 ![Dash](/docs/dash.png)
 
 ### Reccuring Transaction Tracker
