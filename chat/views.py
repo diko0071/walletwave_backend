@@ -91,8 +91,8 @@ def get_answer(request, pk):
         aimessage_response = ai_reponse(
             human_message=chat_message.human_message,
             system_message=system_message,
+            api_key=api_key,
             previous_messages=previous_messages,
-            api_key=api_key
         )
         
         content = aimessage_response.content
