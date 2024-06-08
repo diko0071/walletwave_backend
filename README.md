@@ -1,7 +1,6 @@
 # Wallet Wave is open-source AI-powered transaction tracker. 
 
-![Demo video](https://www.loom.com/share/f4a399d6827f4413bd8f2f0b65b56043)
-
+[![Demo](/docs/loom_preview.png)](https://www.loom.com/share/f4a399d6827f4413bd8f2f0b65b56043)
 
 ## Getting started
 To get started with Wallet Wave backend, follow these simple steps:
