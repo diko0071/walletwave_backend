@@ -44,6 +44,8 @@ CHANNEL_LAYERS = {
     }
 }
 
+TELEGRAM_BOT_TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN')
+
 EXCHANGE_RATE_API_URL = os.getenv('EXCHANGE_RATE_API_URL')
 
 DEBUG = True 
@@ -76,7 +78,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     'django_celery_beat',
     'celery',
-
+    'telegram_integration',
     "rest_framework",
     "corsheaders",
     'rest_framework_simplejwt',

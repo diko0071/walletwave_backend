@@ -26,6 +26,7 @@ urlpatterns = [
     path("api/", include("transaction.urls")),
     path('api/auth/', include('useraccount.urls')),
     path("api/", include("chat.urls")),
+    path("api/", include("telegram_integration.urls")),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 handler500 = 'utils.error_views.handler500'
