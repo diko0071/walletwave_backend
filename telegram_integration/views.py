@@ -16,9 +16,6 @@ import os
 
 load_dotenv()
 
-ALLOWED_USER_IDS = [str(id) for id in User.objects.values_list('telegram_user_id', flat=True) if id]
-
-
 def create_telegram_transaction(request):
     text_input = request.data.get('text')
     if not text_input:

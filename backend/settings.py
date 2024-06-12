@@ -34,9 +34,8 @@ DEBUG = bool(os.getenv('DEBUG', default=0))
 
 WEBSITE_URL = 'https://walletwave-079e0ff9a62d.herokuapp.com/'
 
-#ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS').split(',')
+ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS').split(',')
 
-ALLOWED_HOSTS = ['*']
 
 
 AUTH_USER_MODEL = 'useraccount.User'
