@@ -151,17 +151,17 @@ WHERE
 Think step by step and generate SQL wihtout any additional characters, because it will be used in the application as is.
 """
 
-
 ai_transaction_converter_prompt = """
 Your main goal is to convert user questions to JSON. 
 
-# User 
+Example: 
 [
 {
     "amount": "50.00",
     "description": "Metro Tickets",
     "category": "Utilities & Bills",
-    "transaction_currency": "USD"
+    "transaction_currency": "USD",
+    "transaction_date": "{current_date}"
 }
 ]
 
@@ -174,7 +174,8 @@ Your main goal is to convert user questions to JSON.
     "amount": "50.00",
     "description": "Metro Tickets",
     "category": "Utilities & Bills",
-    "transaction_currency": "AED"
+    "transaction_currency": "AED",
+    "transaction_date": "{current_date}"
 }
 ]
 
@@ -187,7 +188,8 @@ Your main goal is to convert user questions to JSON.
     "amount": "20.00",
     "description": "Flowers for mother",
     "category": "Gifts",
-    "transaction_currency": ""
+    "transaction_currency": "USD",
+    "transaction_date": "{current_date}"
 }
 ]
 # Example 2: 
@@ -198,13 +200,15 @@ Your main goal is to convert user questions to JSON.
     "amount": "20.00",
     "description": "Meal at McDonalds",
     "category": "Food & Drinks",
-    "transaction_currency": "USD"
+    "transaction_currency": "USD",
+    "transaction_date": "{current_date}"
 },
 {
     "amount": "10.00",
     "description": "Taxi ride",
     "category": "Travel",
-    "transaction_currency": "USD"
+    "transaction_currency": "USD",
+    "transaction_date": "{current_date}"
 }
 ]
 # Example 3: 
@@ -214,19 +218,22 @@ Your main goal is to convert user questions to JSON.
     "amount": "10.00",
     "description": "Breakfast",
     "category": "Food & Drinks",
-    "transaction_currency": "EUR"
+    "transaction_currency": "EUR",
+    "transaction_date": "{current_date}"
 },
 {
     "amount": "15.00",
     "description": "Lunch",
     "category": "Food & Drinks",
-    "transaction_currency": "EUR"
+    "transaction_currency": "EUR",
+    "transaction_date": "{current_date}"
 },
 {
     "amount": "30.00",
     "description": "Dinner",
     "category": "Food & Drinks",
-    "transaction_currency": "EUR"
+    "transaction_currency": "EUR",
+    "transaction_date": "{current_date}"
 }
 ]
 If user once specified the currency it means that you MUST use it like: 
@@ -236,13 +243,15 @@ User: breafast 10 usd, dinner 5.
     "amount": "10.00",
     "description": "Breakfast",
     "category": "Food & Drinks",
-    "transaction_currency": "USD"
+    "transaction_currency": "USD",
+    "transaction_date": "{current_date}"
 },
 {
     "amount": "5.00",
     "description": "Dinner",
     "category": "Food & Drinks",
-    "transaction_currency": "USD"
+    "transaction_currency": "USD",
+    "transaction_date": "{current_date}"
 }
 ]
 Transactions can also be empty, but you still MUST add them with 0.00 value:
@@ -252,13 +261,15 @@ User: breafast 10 usd, dinner .
     "amount": "10.00",
     "description": "Breakfast",
     "category": "Food & Drinks",
-    "transaction_currency": "USD"
+    "transaction_currency": "USD",
+    "transaction_date": "{current_date}"
 },
 {
     "amount": "0.00",
     "description": "Dinner",
     "category": "Food & Drinks",
-    "transaction_currency": "USD"
+    "transaction_currency": "USD",
+    "transaction_date": "{current_date}"
 }
 ]
 
@@ -278,6 +289,10 @@ NEVER use others.
 If user once specified the currency it means that you MUST use it.
 
 NEVER invent new. Use the explicit names as you see above.
+
+Current day should be in format YYYY-MM-DD. Exmaple: 2024-05-06.
+
+If user didn't specify the date — you MUST use today date.
 
 JSON must BE without any additional characters. Without '''JSON'' at all. NEVER add additional characters, only JSON.
 """

@@ -159,6 +159,10 @@ def get_transactions_stat(request):
 
     return Response(data)
 
+
+def get_current_date():
+    return timezone.now().date()
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def create_ai_transactions(request):
@@ -167,8 +171,10 @@ def create_ai_transactions(request):
         return Response({"error": "Text input is required"}, status=status.HTTP_400_BAD_REQUEST)
 
     system_message = ai_transaction_converter_prompt
+
+    current_date = get_current_date()
     
-    system_message = system_message + "Use currency by default (ONLY if user didn't specify currency)" + request.user.currency
+    system_message = "Today is " + current_date.strftime('%Y-%m-%d') + ". " + system_message + "Use currency by default (ONLY if user didn't specify currency)" + request.user.currency
 
     api_key = request.user.openai_key
 
@@ -195,7 +201,8 @@ def create_ai_transactions(request):
             amount=transaction_data['amount'],
             description=transaction_data['description'],
             category=transaction_data['category'],
-            transaction_currency=transaction_data.get('transaction_currency', default_currency)
+            transaction_currency=transaction_data.get('transaction_currency', default_currency),
+            transaction_date=transaction_data.get('transaction_date', timezone.now().date())
         )
         transaction_instance.save()
         transaction_dict = model_to_dict(transaction_instance)
@@ -204,7 +211,8 @@ def create_ai_transactions(request):
             "amount": transaction_dict['amount'],
             "description": transaction_dict['description'],
             "category": transaction_dict['category'],
-            "transaction_currency": transaction_dict['transaction_currency']
+            "transaction_currency": transaction_dict['transaction_currency'],
+            "transaction_date": transaction_dict['transaction_date']
         })
     clear_cache()
     return Response(response_data, status=status.HTTP_201_CREATED)

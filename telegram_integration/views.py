@@ -13,6 +13,7 @@ from chat.prompts import ai_transaction_converter_prompt
 from rest_framework import status
 from dotenv import load_dotenv
 import os
+from transaction.views import get_current_date
 
 load_dotenv()
 
@@ -22,8 +23,10 @@ def create_telegram_transaction(request):
         return Response({"error": "Text input is required"}, status=status.HTTP_400_BAD_REQUEST)
 
     system_message = ai_transaction_converter_prompt
+      
+    current_date = get_current_date()
     
-    system_message = system_message + "Use currency by default (ONLY if user didn't specify currency)" + request.user.currency
+    system_message = "Today is " + current_date.strftime('%Y-%m-%d') + ". " + system_message + "Use currency by default (ONLY if user didn't specify currency)" + request.user.currency
 
     api_key = request.user.openai_key
 
@@ -50,7 +53,8 @@ def create_telegram_transaction(request):
             amount=transaction_data['amount'],
             description=transaction_data['description'],
             category=transaction_data['category'],
-            transaction_currency=transaction_data.get('transaction_currency', default_currency)
+            transaction_currency=transaction_data.get('transaction_currency', default_currency),
+            transaction_date=transaction_data.get('transaction_date', current_date)
         )
         transaction_instance.save()
         transaction_dict = model_to_dict(transaction_instance)
@@ -59,7 +63,8 @@ def create_telegram_transaction(request):
             "amount": transaction_dict['amount'],
             "description": transaction_dict['description'],
             "category": transaction_dict['category'],
-            "transaction_currency": transaction_dict['transaction_currency']
+            "transaction_currency": transaction_dict['transaction_currency'],
+            "transaction_date": transaction_dict['transaction_date']
         })
     return Response(response_data, status=status.HTTP_201_CREATED)
 
@@ -124,7 +129,7 @@ def handle_update(update, request):
     })
     return HttpResponse('Transaction not created')
   
-  formatted_transaction_data = f"Transaction has been created: {transaction_data[0]['description']} with price {transaction_data[0]['amount']} {transaction_data[0]['transaction_currency']}."
+  formatted_transaction_data = f"Transaction has been created: {transaction_data[0]['description']} with price {transaction_data[0]['amount']} {transaction_data[0]['transaction_currency']} on {transaction_data[0]['transaction_date']}."
   send_message("sendMessage", {
     'chat_id': chat_id,
     'text': formatted_transaction_data
