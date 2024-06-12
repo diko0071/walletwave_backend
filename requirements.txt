@@ -72,4 +72,3 @@ yarl==1.9.4
 gevent==24.2.1
 celery[redis]==5.4.0
 importlib_metadata>=4.8.1
-python-telegram-bot==21.3.0
