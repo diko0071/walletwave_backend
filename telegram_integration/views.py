@@ -14,10 +14,6 @@ from rest_framework import status
 from dotenv import load_dotenv
 import os
 from transaction.views import get_current_date
-from collections import Counter
-from django.db.models import Sum
-from django.utils import timezone
-from transaction.views import weekly_transactions_report, ai_weekly_report
 
 load_dotenv()
 
@@ -74,7 +70,7 @@ def create_telegram_transaction(request):
 
 
 def setwebhook(request):
-  response = requests.post(os.environ.get("TELEGRAM_BOT_API_URL") + "setWebhook?url=" + os.environ.get("TELEGRAM_APP_API_URL")).json()
+  response = requests.post(os.getenv("TELEGRAM_BOT_API_URL") + "setWebhook?url=" + os.getenv("TELEGRAM_APP_API_URL")).json()
   print(response)
   return HttpResponse(f"{response}")
 
@@ -111,25 +107,9 @@ def handle_update(update, request):
     'text': f'{response_text}'
   })
     return HttpResponse('Starter message sent')
-  
+
   request.data = {'text': text}
   request.user = user
-  
-  if text == '/weekly':
-    spend_report = weekly_transactions_report(request)
-    insight_report = ai_weekly_report(request)
-
-    spend_report = spend_report.data
-    insight_report = insight_report.data
-    insight_report = insight_report.content
-
-    final_reponse = f'Weekly Report\n\nWeekly spend: {spend_report["total_spending"]}\n\nInsights:\n\n {insight_report}'
-
-    send_message("sendMessage", {
-      'chat_id': chat_id,
-      'text': f'{final_reponse}'
-      })
-    return HttpResponse('Weekly report sent')
 
   response = create_telegram_transaction(request)
 
@@ -158,4 +138,4 @@ def handle_update(update, request):
   return HttpResponse('Transaction created')
 
 def send_message(method, data):
-  return requests.post(os.environ.get("TELEGRAM_BOT_API_URL") + method, data)
+  return requests.post(os.getenv("TELEGRAM_BOT_API_URL") + method, data)
