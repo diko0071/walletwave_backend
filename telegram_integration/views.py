@@ -74,7 +74,7 @@ def create_telegram_transaction(request):
 
 
 def setwebhook(request):
-  response = requests.post(os.environ.get("TELEGRAM_BOT_API_URL") + "setWebhook?url=" + os.environ.get("TELEGRAM_APP_API_URL")).json()
+  response = requests.post(os.getenv("TELEGRAM_BOT_API_URL") + "setWebhook?url=" + os.getenv("TELEGRAM_APP_API_URL")).json()
   print(response)
   return HttpResponse(f"{response}")
 
@@ -158,4 +158,4 @@ def handle_update(update, request):
   return HttpResponse('Transaction created')
 
 def send_message(method, data):
-  return requests.post(os.environ.get("TELEGRAM_BOT_API_URL") + method, data)
+  return requests.post(os.getenv("TELEGRAM_BOT_API_URL") + method, data)
