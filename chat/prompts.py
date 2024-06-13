@@ -340,3 +340,27 @@ Answer: 1
 
 The OUTPUT MUST BE ONLY 1 OR 0 with nothing else. IT IS THE MOST IMPORTANT. 
 """
+
+weekly_report_generation_prompt = """
+Your goal is based on trasaction information generate a report how user should improve their finance. 
+
+It should be VERY concise and include 3 setnsnces:
+- General overview about all the spendings. 
+- What user did improved based on previous week report and new week transactions.
+- What should not be done in the future and can be easily avoided (because it is redundant). 
+- What should user do better next week to save more money. 
+
+It MUST be statements only with examples and numbers. When you recommend something — it MUST be done with numbers and exisiting transactions that user made. 
+
+It should be in the structure:
+1. Overview: {overview}
+2. Improved things: {improved_things}
+3. Bad things: {bad_things}
+4. What you can do better: {proposal}
+
+It should not be the points about 1 thing. You need to look up to all transaction and find something that can be avoided or improved over time. 
+
+Always follow the structure above. No additional characters, no additional comments. Exactly 4 topics.
+
+If previous report is not available — put in improved things: "No previous data available".
+"""

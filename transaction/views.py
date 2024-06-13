@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from rest_framework.decorators import api_view
-from .models import Transaction, TransactionCategory, RecurringTransaction
+from .models import Transaction, TransactionCategory, RecurringTransaction, TrasactionReport
 from rest_framework.response import Response
 from .serializers import TransactionSerializer, RecurringTransactionSerializer
 from django.shortcuts import get_object_or_404
@@ -11,7 +11,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import permission_classes
 from django.forms.models import model_to_dict
 from django.db import transaction as db_transaction
-from .services import ai_transaction_converter
+from .services import ai_transaction_converter, ai_report_generator
 import json
 import calendar
 from django.utils import timezone
@@ -25,6 +25,9 @@ from .tasks import create_transaction_and_update_next_charge_date
 from datetime import datetime
 from chat.prompts import ai_transaction_converter_prompt
 from django.db.models.functions import TruncMonth, TruncDay
+from collections import Counter
+from chat.prompts import weekly_report_generation_prompt
+from useraccount.models import User
 
 def clear_cache():
     cache.clear()
@@ -269,3 +272,49 @@ def delete_recurring_transaction(request, id):
     
     transaction.delete()
     return Response({'message': 'Recurring transaction was deleted successfully!'}, status=status.HTTP_204_NO_CONTENT)
+
+
+def ai_weekly_report(request):
+    user = request.user
+
+    api_key = user.openai_key
+
+    if not api_key:
+        return Response({"error": "No API key provided. Please provide a valid OpenAI API key."}, status=status.HTTP_400_BAD_REQUEST)
+
+    system_message = weekly_report_generation_prompt
+
+    last_report = TrasactionReport.objects.filter(user=request.user).order_by('-created_at').first()
+    
+    last_report_data = last_report.report if last_report else "No previous data available"
+    
+    now = timezone.now()
+
+    week_ago = now - timezone.timedelta(days=7)
+
+    transactions_last_week = Transaction.objects.filter(user=user, transaction_date__range=[week_ago, now])
+
+    serializer = TransactionSerializer(transactions_last_week, many=True)
+
+    required_fields = ['category', 'transaction_type', 'transaction_currency', 'amount', 'description']
+
+    data = [{field: transaction[field] for field in required_fields} for transaction in serializer.data]
+
+    data_string = str(data)
+
+    report = ai_report_generator(data_string, system_message, api_key, last_report_data)
+    
+    return Response(report, status=status.HTTP_200_OK)
+
+def weekly_transactions_report(request):
+    now = timezone.now()
+
+    week_ago = now - timezone.timedelta(days=7)
+
+    transactions = Transaction.objects.filter(user=request.user, transaction_date__range=[week_ago, now])
+
+    total_spending = transactions.aggregate(Sum('amount'))['amount__sum'] or 0
+
+    return Response({
+        'total_spending': total_spending,
+    }, status=status.HTTP_200_OK)

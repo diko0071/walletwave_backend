@@ -151,3 +151,21 @@ class RecurringTransaction(models.Model):
 
         def __str__(self):
             return f"{self.description} - {self.amount} {self.currency} - {self.frequency} - Day {self.charge_day} of each month"
+        
+
+class TransactionReportType(models.TextChoices):
+    WEEKLY = "Weekly"
+    MONTHLY = "Monthly"
+    YEARLY = "Yearly"
+
+class TrasactionReport(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    report = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    type = models.CharField(max_length=40, choices=TransactionReportType.choices, default=TransactionReportType.WEEKLY)
+    period_start = models.DateField()
+    period_end = models.DateField()
+
+    def __str__(self):
+        return f"{self.user.username} - {self.type} - {self.period_start} - {self.period_end}"
