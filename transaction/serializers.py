@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Transaction, RecurringTransaction
+from .models import Transaction, RecurringTransaction, TrasactionReport
 from useraccount.models import User
 from django_celery_beat.models import PeriodicTask, CrontabSchedule
 from django.utils import timezone
@@ -19,6 +19,12 @@ class TransactionSummarySerializer(serializers.ModelSerializer):
     class Meta:
         model = Transaction
         fields = [ 'transaction_date', 'category', 'description', 'transaction_type', 'converted_amount', 'converted_currency']
+
+
+class TransactionReportSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TrasactionReport
+        fields = '__all__'
 
 
 class RecurringTransactionSerializer(serializers.ModelSerializer):

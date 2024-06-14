@@ -18,6 +18,7 @@ from collections import Counter
 from django.db.models import Sum
 from django.utils import timezone
 from transaction.views import weekly_transactions_report, ai_weekly_report
+from django_celery_beat.models import PeriodicTask, IntervalSchedule, CrontabSchedule
 
 load_dotenv()
 
@@ -87,34 +88,67 @@ def telegram_bot(request):
     return HttpResponseBadRequest('Bad Request')
 
 def handle_update(update, request):
-  chat_id = update['message']['chat']['id']
-  
-  try:
-    user = User.objects.get(telegram_user_id=chat_id)
-  
-  except User.DoesNotExist:
-    send_message("sendMessage", {
-      'chat_id': chat_id,
-      'text': 'You are not registered. Please sign up on our platform: https://walletwave.app'
-    })
+    chat_id = update['message']['chat']['id']
+    text = update['message']['text']
+
+    try:
+        user = User.objects.get(telegram_user_id=chat_id)
+    except User.DoesNotExist:
+        send_message("sendMessage", {
+            'chat_id': chat_id,
+            'text': 'You are not registered. Please sign up on our platform: https://walletwave.app'
+        })
+        return HttpResponse('User not registered')
+
+    request.user = user
+
+    if text == '/start':
+        return handle_start(request, chat_id)
+    elif text == '/weekly':
+        return handle_weekly(request, chat_id)
+    else:
+        return handle_transaction(request, chat_id, text)
     
-    return HttpResponse('User not registered')
 
-  text = update['message']['text']
-
-  if text == '/start':
+def handle_start(request, chat_id):
     response_text = 'Welcome to WalletWave! Please send me your transactions in any format. I will create a transaction and add them to your transaction list!'
-
     send_message("sendMessage", {
-    'chat_id': chat_id,
-    'text': f'{response_text}'
-  })
+        'chat_id': chat_id,
+        'text': f'{response_text}'
+    })
+
+    task_name = f"Weekly task for user {request.user.id}"
+
+    existing_task = PeriodicTask.objects.filter(name=task_name).first()
+    if not existing_task:
+        schedules = CrontabSchedule.objects.filter(
+            minute='0',
+            hour='0',
+            day_of_week='1', 
+            day_of_month='*',
+            month_of_year='*',
+        )
+        if schedules.exists():
+            schedule = schedules.first()
+        else:
+            schedule = CrontabSchedule.objects.create(
+                minute='0',
+                hour='0',
+                day_of_week='1',  
+                day_of_month='*',
+                month_of_year='*',
+            )
+
+        PeriodicTask.objects.create(
+            crontab=schedule,
+            name=task_name,
+            task='telegram_integration.tasks.send_weekly_insights',
+            args=json.dumps([chat_id]),
+        )
+
     return HttpResponse('Starter message sent')
-  
-  request.data = {'text': text}
-  request.user = user
-  
-  if text == '/weekly':
+
+def handle_weekly(request, chat_id):
     spend_report = weekly_transactions_report(request)
     insight_report = ai_weekly_report(request)
 
@@ -122,39 +156,42 @@ def handle_update(update, request):
     insight_report = insight_report.data
     insight_report = insight_report.content
 
-    final_reponse = f'Weekly Report\n\nWeekly spend: {spend_report["total_spending"]}\n\nInsights:\n\n {insight_report}'
+    final_response = f'Weekly Report\n\nWeekly spend: {spend_report["total_spending"]}\n\nInsights:\n\n {insight_report}'
 
     send_message("sendMessage", {
-      'chat_id': chat_id,
-      'text': f'{final_reponse}'
-      })
+        'chat_id': chat_id,
+        'text': f'{final_response}'
+    })
     return HttpResponse('Weekly report sent')
 
-  response = create_telegram_transaction(request)
+def handle_transaction(request, chat_id, text):
+    request.data = {'text': text}
+    response = create_telegram_transaction(request)
 
-  transaction_data = response.data
+    transaction_data = response.data
 
-  if response.status_code == status.HTTP_400_BAD_REQUEST and response.data.get('error') == "No API key provided. Please provide a valid OpenAI API key.":
+    if response.status_code == status.HTTP_400_BAD_REQUEST and response.data.get('error') == "No API key provided. Please provide a valid OpenAI API key.":
+        send_message("sendMessage", {
+            'chat_id': chat_id,
+            'text': 'No OpenAI API key provided. Please set your OpenAI API key in the settings.'
+        })
+        return HttpResponse('OpenAI API key not provided')
+
+    if not transaction_data:
+        send_message("sendMessage", {
+            'chat_id': chat_id,
+            'text': 'I can\'t understand your message. Please specify the amount and description of the transaction.'
+        })
+        return HttpResponse('Transaction not created')
+    
+    formatted_transaction_data = f"Transaction has been created: {transaction_data[0]['description']} with price {transaction_data[0]['amount']} {transaction_data[0]['transaction_currency']} on {transaction_data[0]['transaction_date']}."
     send_message("sendMessage", {
-      'chat_id': chat_id,
-      'text': 'No OpenAI API key provided. Please set your OpenAI API key in the settings.'
+        'chat_id': chat_id,
+        'text': formatted_transaction_data
     })
-    return HttpResponse('OpenAI API key not provided')
+    
+    return HttpResponse('Transaction created')
 
-  if not transaction_data:
-    send_message("sendMessage", {
-      'chat_id': chat_id,
-      'text': 'I can\'t understand your message. Please specify the amount and description of the transaction.'
-    })
-    return HttpResponse('Transaction not created')
-  
-  formatted_transaction_data = f"Transaction has been created: {transaction_data[0]['description']} with price {transaction_data[0]['amount']} {transaction_data[0]['transaction_currency']} on {transaction_data[0]['transaction_date']}."
-  send_message("sendMessage", {
-    'chat_id': chat_id,
-    'text': formatted_transaction_data
-  })
-  
-  return HttpResponse('Transaction created')
 
 def send_message(method, data):
   return requests.post(os.environ.get("TELEGRAM_BOT_API_URL") + method, data)

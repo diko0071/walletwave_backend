@@ -286,7 +286,13 @@ def ai_weekly_report(request):
 
     last_report = TrasactionReport.objects.filter(user=request.user).order_by('-created_at').first()
     
-    last_report_data = last_report.report if last_report else "No previous data available"
+    if last_report:
+        report = last_report.report
+        period_start = str(last_report.period_start)
+        period_end = str(last_report.period_end)
+        last_report_data = f"Report: {report}, Start: {period_start}, End: {period_end}"
+    else:
+        last_report_data = "No previous data available"
     
     now = timezone.now()
 
@@ -318,3 +324,4 @@ def weekly_transactions_report(request):
     return Response({
         'total_spending': total_spending,
     }, status=status.HTTP_200_OK)
+
