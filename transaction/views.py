@@ -319,7 +319,7 @@ def weekly_transactions_report(request):
 
     transactions = Transaction.objects.filter(user=request.user, transaction_date__range=[week_ago, now])
 
-    total_spending = transactions.aggregate(Sum('amount'))['amount__sum'] or 0
+    total_spending = transactions.aggregate(Sum('converted_amount'))['converted_amount__sum'] or 0
 
     return Response({
         'total_spending': total_spending,

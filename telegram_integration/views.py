@@ -103,28 +103,28 @@ def handle_update(update, request):
     request.user = user
 
     if text == '/start':
-        return handle_start(request, chat_id)
+        return handle_start(request, chat_id, user.id)
     elif text == '/weekly':
         return handle_weekly(request, chat_id)
     else:
         return handle_transaction(request, chat_id, text)
     
 
-def handle_start(request, chat_id):
+def handle_start(request, chat_id, user_id):
     response_text = 'Welcome to WalletWave! Please send me your transactions in any format. I will create a transaction and add them to your transaction list!'
     send_message("sendMessage", {
         'chat_id': chat_id,
         'text': f'{response_text}'
     })
 
-    task_name = f"Weekly task for user {request.user.id}"
+    task_name = f"Weekly task for user {user_id}"
 
     existing_task = PeriodicTask.objects.filter(name=task_name).first()
     if not existing_task:
         schedules = CrontabSchedule.objects.filter(
-            minute='0',
-            hour='0',
-            day_of_week='1', 
+            minute='*',
+            hour='*',
+            day_of_week='*', 
             day_of_month='*',
             month_of_year='*',
         )
@@ -132,9 +132,9 @@ def handle_start(request, chat_id):
             schedule = schedules.first()
         else:
             schedule = CrontabSchedule.objects.create(
-                minute='0',
-                hour='0',
-                day_of_week='1',  
+                minute='*',
+                hour='*',
+                day_of_week='*',  
                 day_of_month='*',
                 month_of_year='*',
             )
@@ -143,7 +143,7 @@ def handle_start(request, chat_id):
             crontab=schedule,
             name=task_name,
             task='telegram_integration.tasks.send_weekly_insights',
-            args=json.dumps([chat_id]),
+            args=json.dumps([chat_id, str(user_id)]),
         )
 
     return HttpResponse('Starter message sent')

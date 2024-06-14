@@ -14,9 +14,9 @@ from transaction.models import TransactionReportType
 from transaction.serializers import TransactionReportSerializer
 
 @shared_task(name='telegram_integration.tasks.send_weekly_insights')
-def send_weekly_insights(chat_id):
+def send_weekly_insights(chat_id, user_id):
     request = HttpRequest()
-    user = User.objects.get(telegram_user_id=chat_id)
+    user = User.objects.get(id=user_id)
     request.user = user
     spend_report = weekly_transactions_report(request)
     insight_report = ai_weekly_report(request)
