@@ -122,9 +122,9 @@ def handle_start(request, chat_id, user_id):
     existing_task = PeriodicTask.objects.filter(name=task_name).first()
     if not existing_task:
         schedules = CrontabSchedule.objects.filter(
-            minute='*',
-            hour='*',
-            day_of_week='*', 
+            minute='0',
+            hour='0',
+            day_of_week='1', 
             day_of_month='*',
             month_of_year='*',
         )
@@ -132,9 +132,9 @@ def handle_start(request, chat_id, user_id):
             schedule = schedules.first()
         else:
             schedule = CrontabSchedule.objects.create(
-                minute='*',
-                hour='*',
-                day_of_week='*',  
+                minute='0',
+                hour='0',
+                day_of_week='1',  
                 day_of_month='*',
                 month_of_year='*',
             )
