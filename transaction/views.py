@@ -28,6 +28,7 @@ from django.db.models.functions import TruncMonth, TruncDay
 from collections import Counter
 from chat.prompts import weekly_report_generation_prompt
 from useraccount.models import User
+from decimal import Decimal
 
 def clear_cache():
     cache.clear()
@@ -89,6 +90,8 @@ def get_transactions_stat(request):
     user = request.user
     user_transactions = Transaction.objects.filter(user=user)
 
+    monthly_budget = user.monthly_budget
+
     now = timezone.now().date()
     current_month_start = now.replace(day=1)
     last_day_of_current_month = calendar.monthrange(now.year, now.month)[1]
@@ -140,6 +143,8 @@ def get_transactions_stat(request):
     monthly_change_absolute = total_monthly_sum - total_same_period_last_month_sum
     monthly_change_percentage = ((total_monthly_sum - total_same_period_last_month_sum) / total_same_period_last_month_sum * 100) if total_same_period_last_month_sum != 0 else 0
 
+    current_month_left = Decimal(monthly_budget) - Decimal(total_monthly_sum)
+
     data = {
         'transactions_by_category': list(transactions_by_category),
         'total_monthly_sum': total_monthly_sum,
@@ -157,7 +162,9 @@ def get_transactions_stat(request):
         'today_sum': today_sum,
         'yesterday_sum': yesterday_sum,
         'daily_change': daily_change,
-        'daily_change_absolute': daily_change_absolute
+        'daily_change_absolute': daily_change_absolute,
+        'monthly_budget': monthly_budget,
+        'current_month_left': current_month_left
     }
 
     return Response(data)
