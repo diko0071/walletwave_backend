@@ -5,6 +5,6 @@ class UserDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = (
-            'id', 'name', 'currency', 'email', 'openai_key', 'telegram_user_id'
+            'id', 'name', 'currency', 'email', 'openai_key', 'telegram_user_id', 'monthly_budget',
         )
 

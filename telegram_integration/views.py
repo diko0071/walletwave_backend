@@ -130,6 +130,7 @@ def handle_start(request, chat_id, user_id):
         )
         if schedules.exists():
             schedule = schedules.first()
+            
         else:
             schedule = CrontabSchedule.objects.create(
                 minute='0',
@@ -195,3 +196,4 @@ def handle_transaction(request, chat_id, text):
 
 def send_message(method, data):
   return requests.post(os.environ.get("TELEGRAM_BOT_API_URL") + method, data)
+
