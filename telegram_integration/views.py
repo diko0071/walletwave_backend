@@ -17,8 +17,9 @@ from transaction.views import get_current_date
 from collections import Counter
 from django.db.models import Sum
 from django.utils import timezone
-from transaction.views import weekly_transactions_report, ai_weekly_report
+from transaction.views import weekly_transactions_report, ai_weekly_report, monthly_budget_limits
 from django_celery_beat.models import PeriodicTask, IntervalSchedule, CrontabSchedule
+
 
 load_dotenv()
 
@@ -171,6 +172,8 @@ def handle_transaction(request, chat_id, text):
 
     transaction_data = response.data
 
+    budget_limits = monthly_budget_limits(request)
+
     if response.status_code == status.HTTP_400_BAD_REQUEST and response.data.get('error') == "No API key provided. Please provide a valid OpenAI API key.":
         send_message("sendMessage", {
             'chat_id': chat_id,
@@ -185,7 +188,8 @@ def handle_transaction(request, chat_id, text):
         })
         return HttpResponse('Transaction not created')
     
-    formatted_transaction_data = f"Transaction has been created: {transaction_data[0]['description']} with price {transaction_data[0]['amount']} {transaction_data[0]['transaction_currency']} on {transaction_data[0]['transaction_date']}."
+    formatted_transaction_data = f"Transaction has been created: {transaction_data[0]['description']} with price {transaction_data[0]['amount']} {transaction_data[0]['transaction_currency']} on {transaction_data[0]['transaction_date']}.\n\n You have {budget_limits['current_month_left']} {budget_limits['currency']} left for this month."
+    
     send_message("sendMessage", {
         'chat_id': chat_id,
         'text': formatted_transaction_data

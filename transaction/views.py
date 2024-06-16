@@ -332,3 +332,29 @@ def weekly_transactions_report(request):
         'total_spending': total_spending,
     }, status=status.HTTP_200_OK)
 
+
+def monthly_budget_limits(request):
+    user = request.user
+
+    user_transactions = Transaction.objects.filter(user=user)
+
+    monthly_budget = user.monthly_budget
+    currency = user.currency
+
+    now = timezone.now().date()
+    current_month_start = now.replace(day=1)
+    last_day_of_current_month = calendar.monthrange(now.year, now.month)[1]
+    current_month_end = now.replace(day=last_day_of_current_month)
+
+    total_monthly_sum = user_transactions.filter(
+        transaction_date__range=[current_month_start, current_month_end]
+    ).aggregate(total_sum=Sum('converted_amount'))['total_sum'] or 0
+
+    current_month_left = Decimal(monthly_budget) - Decimal(total_monthly_sum)
+
+    return Response({
+        'current_month_left': current_month_left,
+        'monthly_budget': monthly_budget,
+        'total_monthly_sum': total_monthly_sum,
+        'currency': currency,
+    }, status=status.HTTP_200_OK)
