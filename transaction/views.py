@@ -352,9 +352,11 @@ def monthly_budget_limits(request):
 
     current_month_left = Decimal(monthly_budget) - Decimal(total_monthly_sum)
 
-    return Response({
+    response_data = {
         'current_month_left': current_month_left,
         'monthly_budget': monthly_budget,
         'total_monthly_sum': total_monthly_sum,
         'currency': currency,
-    }, status=status.HTTP_200_OK)
+    }
+
+    return response_data
