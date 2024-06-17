@@ -201,3 +201,7 @@ def handle_transaction(request, chat_id, text):
 def send_message(method, data):
   return requests.post(os.environ.get("TELEGRAM_BOT_API_URL") + method, data)
 
+def delete_webhook(request):
+    response = requests.get(os.environ.get("TELEGRAM_BOT_API_URL") + "deleteWebhook").json()
+    return HttpResponse(f"{response}")
+
