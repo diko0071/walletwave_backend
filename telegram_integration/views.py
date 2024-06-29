@@ -31,8 +31,11 @@ def create_telegram_transaction(request):
     system_message = ai_transaction_converter_prompt
       
     current_date = get_current_date()
+
+    last_5_transactions = Transaction.objects.filter(user=request.user).order_by('-transaction_date')[:5]
+    last_5_transactions_data = [model_to_dict(transaction) for transaction in last_5_transactions]
     
-    system_message = "Today is " + current_date.strftime('%Y-%m-%d') + ". " + system_message + "Use currency by default (ONLY if user didn't specify currency)" + request.user.currency
+    system_message = "Today is " + current_date.strftime('%Y-%m-%d') + ". " + system_message + "Use currency by default (ONLY if user didn't specify currency)" + request.user.currency + ". But also be mindfull, towel or something can not cost 200 USD. Use data from last 5 transactions to figure our the right currency even if user didn't specify currency (if the puchase not clear and user did not specify currency — then use the defult), take into account user last 5 transactions: " + str(last_5_transactions_data)
 
     api_key = request.user.openai_key
 
