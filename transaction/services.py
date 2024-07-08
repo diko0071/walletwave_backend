@@ -3,6 +3,7 @@ from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage, SystemMessage
 import requests
 import os
+from datetime import datetime
 from useraccount.models import User
 from .models import RecurringTransaction
 
@@ -29,3 +30,7 @@ def ai_report_generator(human_message, system_message, api_key, previous_report)
     HumanMessage(content=f'Transactions: {human_message}'),
         ]
     return chat.invoke(messages)
+
+
+def get_today_date():
+    return datetime.now().strftime("%Y-%m-%d")
