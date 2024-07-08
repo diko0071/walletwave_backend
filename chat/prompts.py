@@ -1,6 +1,6 @@
-from .services import get_today_date
+from datetime import datetime
 
-today = get_today_date()
+today = datetime.now().strftime("%Y-%m-%d")
 
 
 text_to_sql_prompt = """
